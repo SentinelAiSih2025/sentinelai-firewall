@@ -1,0 +1,4008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentinelAI Next-Generation Firewall</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vis-network@9.1.2/dist/vis-network.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.2/dist/vis-network.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.5.0/dist/socket.io.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --dark-color: #34495e;
+            --light-color: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .sidebar {
+            background-color: var(--primary-color);
+            color: white;
+            min-height: calc(100vh - 56px);
+            padding: 0;
+        }
+
+        /* Profile Alert Styles */
+        .profile-alert {
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+
+        /* Profile Form States */
+        .profile-form.editing .form-control:not([readonly]) {
+            background-color: #fff;
+            border-color: #3498db;
+        }
+
+        .profile-form.editing .avatar-option-profile {
+            cursor: pointer;
+        }
+
+                /* Mobile Sidebar Styles */
+        .sidebar-mobile {
+            display: none;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu-btn:hover {
+            transform: scale(1.1);
+            background: var(--primary-dark);
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none !important;
+            }
+
+            .sidebar-mobile {
+                display: block;
+                position: fixed;
+                top: 0;
+                left: -280px;
+                width: 280px;
+                height: 100vh;
+                background: var(--primary-color);
+                color: white;
+                z-index: 999;
+                transition: left 0.3s ease;
+                padding-top: 60px;
+                overflow-y: auto;
+            }
+
+            .sidebar-mobile.active {
+                left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+                backdrop-filter: blur(2px);
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            /* Adjust main content for mobile */
+            .col-md-10 {
+                width: 100% !important;
+                padding-left: 15px !important;
+                padding-right: 15px !important;
+            }
+
+            /* Mobile sidebar navigation styles */
+            .sidebar-mobile .nav-link {
+                color: rgba(255, 255, 255, 0.9);
+                padding: 15px 20px;
+                border-left: 3px solid transparent;
+                transition: all 0.3s ease;
+                font-weight: 500;
+            }
+
+            .sidebar-mobile .nav-link:hover,
+            .sidebar-mobile .nav-link.active {
+                color: white;
+                background-color: rgba(255, 255, 255, 0.1);
+                border-left-color: var(--secondary-color);
+            }
+
+            .sidebar-mobile .nav-link i {
+                width: 20px;
+                margin-right: 10px;
+                text-align: center;
+            }
+
+            /* Close button for mobile sidebar */
+            .sidebar-close {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: none;
+                border: none;
+                color: white;
+                font-size: 1.5rem;
+                cursor: pointer;
+            }
+        }
+
+        /* Security Section Styles */
+        .security-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .security-status.enabled {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+
+        .security-status.disabled {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Profile Section Styles */
+        .avatar-options-profile {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .avatar-option-profile {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #e3e6f0;
+            cursor: pointer;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .avatar-option-profile:hover {
+            border-color: var(--secondary-color);
+            transform: scale(1.05);
+        }
+
+        .avatar-option-profile.selected {
+            border-color: var(--success-color);
+            transform: scale(1.1);
+        }
+
+        .avatar-option-profile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .profile-stat {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .profile-stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .profile-stat-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+
+        /* Form states */
+        .form-control:read-only {
+            background-color: #f8f9fa;
+            border-color: #e3e6f0;
+        }
+
+        .form-control:disabled {
+            background-color: #e9ecef;
+            opacity: 1;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 20px;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .sidebar .nav-link:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-left-color: var(--secondary-color);
+        }
+
+        .sidebar .nav-link i {
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #e3e6f0;
+            font-weight: 600;
+            padding: 15px 20px;
+        }
+
+        .user-profile-dropdown .dropdown-toggle::after {
+    margin-left: 8px;
+}
+
+.user-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-role-badge {
+    background: var(--secondary-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+        .metric-card {
+            text-align: center;
+            padding: 15px;
+            transition: transform 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-online {
+            background-color: var(--success-color);
+        }
+
+        .status-warning {
+            background-color: var(--warning-color);
+        }
+
+        .status-critical {
+            background-color: var(--danger-color);
+        }
+
+        .threat-level-low {
+            color: var(--success-color);
+        }
+
+        .threat-level-medium {
+            color: var(--warning-color);
+        }
+
+        .threat-level-high {
+            color: var(--danger-color);
+        }
+
+        .threat-level-critical {
+            color: #8e44ad;
+            font-weight: bold;
+        }
+
+        .incident-card {
+            border-left: 4px solid;
+            margin-bottom: 10px;
+        }
+
+        .incident-low {
+            border-left-color: var(--success-color);
+        }
+
+        .incident-medium {
+            border-left-color: var(--warning-color);
+        }
+
+        .incident-high {
+            border-left-color: var(--danger-color);
+        }
+
+        .incident-critical {
+            border-left-color: #8e44ad;
+        }
+
+        .traffic-flow {
+            height: 300px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .attack-graph {
+            height: 500px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .log-entry {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            padding: 5px 10px;
+            border-bottom: 1px solid #e3e6f0;
+        }
+
+        .log-timestamp {
+            color: #6c757d;
+        }
+
+        .log-info {
+            color: var(--secondary-color);
+        }
+
+        .log-warning {
+            color: var(--warning-color);
+        }
+
+        .log-error {
+            color: var(--danger-color);
+        }
+
+        .settings-section {
+            margin-bottom: 30px;
+        }
+
+        .tab-content {
+            padding: 20px;
+            background-color: white;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .nav-tabs .nav-link.active {
+            font-weight: 600;
+        }
+
+        .progress {
+            height: 8px;
+        }
+
+        .node-network {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .node-endpoint {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .node-user {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .node-threat {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .node-data {
+            background-color: #9b59b6;
+            color: white;
+        }
+
+        .node-service {
+            background-color: #1abc9c;
+            color: white;
+        }
+
+        .mitre-technique {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mitre-technique:hover {
+            transform: scale(1.05);
+        }
+
+        .attack-path {
+            stroke-dasharray: 5,5;
+            animation: dash 1s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -10;
+            }
+        }
+
+        .incident-modal-content {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .incident-form-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .incident-priority-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+<!-- Updated Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-shield-alt"></i> SentinelAI
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                        <img id="user-avatar" src="" alt="User Avatar" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 8px;">
+                        <span id="user-name">User</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#profile" data-bs-toggle="tab"><i class="fas fa-user"></i> Profile</a></li>
+                        <li><a class="dropdown-item" href="#settings" data-bs-toggle="tab"><i class="fas fa-cog"></i> Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar d-none d-md-block">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#threat-detection" data-bs-toggle="tab">
+                            <i class="fas fa-radar-dish"></i> Threat Detection
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#network-traffic" data-bs-toggle="tab">
+                            <i class="fas fa-network-wired"></i> Network Traffic
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#mitre-attack" data-bs-toggle="tab">
+                            <i class="fas fa-chess-board"></i> MITRE ATT&CK
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#ai-analytics" data-bs-toggle="tab">
+                            <i class="fas fa-brain"></i> AI Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#incident-response" data-bs-toggle="tab">
+                            <i class="fas fa-first-aid"></i> Incident Response
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#settings" data-bs-toggle="tab">
+                            <i class="fas fa-cogs"></i> Settings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#profile" data-bs-toggle="tab">
+                            <i class="fas fa-user"></i> Profile
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Mobile Sidebar -->
+            <div class="sidebar-mobile" id="mobileSidebar">
+                <button class="sidebar-close" onclick="closeMobileSidebar()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab" onclick="closeMobileSidebar()">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#threat-detection" data-bs-toggle="tab" onclick="closeMobileSidebar()">
+                            <i class="fas fa-radar-dish"></i> Threat Detection
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#network-traffic" data-bs-toggle="tab" onclick="closeMobileSidebar()">
+                            <i class="fas fa-network-wired"></i> Network Traffic
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#mitre-attack" data-bs-toggle="tab" onclick="closeMobileSidebar()">
+                            <i class="fas fa-chess-board"></i> MITRE ATT&CK
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#ai-analytics" data-bs-toggle="tab" onclick="closeMobileSidebar()">
+                            <i class="fas fa-brain"></i> AI Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#incident-response" data-bs-toggle="tab" onclick="closeMobileSidebar()">
+                            <i class="fas fa-first-aid"></i> Incident Response
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#settings" data-bs-toggle="tab" onclick="closeMobileSidebar()">
+                            <i class="fas fa-cogs"></i> Settings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#profile" data-bs-toggle="tab" onclick="closeMobileSidebar()">
+                            <i class="fas fa-user"></i> Profile
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Overlay -->
+            <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 main-content">
+                <div class="tab-content">
+                    <!-- Dashboard Tab -->
+                    <div class="tab-pane fade show active" id="dashboard">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">Dashboard Overview</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <div class="btn-group me-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="refresh-dashboard">
+                                        <i class="fas fa-sync-alt"></i> Refresh
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- System Status -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card metric-card">
+                                    <div class="card-body">
+                                        <div class="metric-label">System Status</div>
+                                        <div class="metric-value">
+                                            <span class="status-indicator status-online"></span>
+                                            <span id="system-status">Operational</span>
+                                        </div>
+                                        <div class="small text-muted" id="system-uptime">Uptime: 12d 4h 32m</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card metric-card">
+                                    <div class="card-body">
+                                        <div class="metric-label">Threats Blocked</div>
+                                        <div class="metric-value" id="threats-blocked">0</div>
+                                        <div class="small text-muted" id="threats-today">Today: 0</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card metric-card">
+                                    <div class="card-body">
+                                        <div class="metric-label">Active Incidents</div>
+                                        <div class="metric-value" id="active-incidents">0</div>
+                                        <div class="small text-muted" id="incidents-critical">Critical: 0</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card metric-card">
+                                    <div class="card-body">
+                                        <div class="metric-label">Detection Rate</div>
+                                        <div class="metric-value" id="detection-rate">0%</div>
+                                        <div class="small text-muted" id="false-positive-rate">False Positives: 0%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Performance Metrics -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-tachometer-alt"></i> Performance Metrics
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <div class="mb-2">
+                                                    <span class="fw-bold">Throughput:</span>
+                                                    <span id="throughput-value" class="float-end">0 Gbps</span>
+                                                </div>
+                                                <div class="progress mb-3">
+                                                    <div id="throughput-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-2">
+                                                    <span class="fw-bold">Latency:</span>
+                                                    <span id="latency-value" class="float-end">0 ms</span>
+                                                </div>
+                                                <div class="progress mb-3">
+                                                    <div id="latency-bar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-2">
+                                                    <span class="fw-bold">CPU Usage:</span>
+                                                    <span id="cpu-usage" class="float-end">0%</span>
+                                                </div>
+                                                <div class="progress mb-3">
+                                                    <div id="cpu-bar" class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-2">
+                                                    <span class="fw-bold">Memory Usage:</span>
+                                                    <span id="memory-usage" class="float-end">0 MB</span>
+                                                </div>
+                                                <div class="progress mb-3">
+                                                    <div id="memory-bar" class="progress-bar bg-warning" role="progressbar" style="width: 0%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-chart-line"></i> Threat Activity (Last 24 Hours)
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="threatActivityChart" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Incidents -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-exclamation-triangle"></i> Recent Incidents</span>
+                                        <button class="btn btn-sm btn-outline-primary" id="view-all-incidents">
+                                            <i class="fas fa-list"></i> View All
+                                        </button>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div id="recent-incidents-list" class="list-group list-group-flush">
+                                            <!-- Incidents will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-shield-alt"></i> Security Posture
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row text-center">
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <div class="h4 threat-level-low" id="low-threats">0</div>
+                                                    <small class="text-muted">Low Threats</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <div class="h4 threat-level-medium" id="medium-threats">0</div>
+                                                    <small class="text-muted">Medium Threats</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <div class="h4 threat-level-high" id="high-threats">0</div>
+                                                    <small class="text-muted">High Threats</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>Security Score</span>
+                                                <span id="security-score">0%</span>
+                                            </div>
+                                            <div class="progress" style="height: 20px;">
+                                                <div id="security-score-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Threat Detection Tab -->
+                    <div class="tab-pane fade" id="threat-detection">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">Threat Detection</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <div class="btn-group me-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="start-detection">
+                                        <i class="fas fa-play"></i> Start Detection
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="stop-detection">
+                                        <i class="fas fa-stop"></i> Stop Detection
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-list"></i> Real-time Threat Detection Log
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div id="threat-detection-log" style="height: 400px; overflow-y: auto;">
+                                            <!-- Threat logs will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-chart-pie"></i> Threat Distribution
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="threatDistributionChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-table"></i> Recent Threats
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-hover" id="threats-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Timestamp</th>
+                                                        <th>Source IP</th>
+                                                        <th>Destination IP</th>
+                                                        <th>Threat Type</th>
+                                                        <th>Severity</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Threats will be populated here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Network Traffic Tab -->
+                    <div class="tab-pane fade" id="network-traffic">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">Network Traffic Analysis</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <div class="btn-group me-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="start-traffic-capture">
+                                        <i class="fas fa-play"></i> Start Capture
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="stop-traffic-capture">
+                                        <i class="fas fa-stop"></i> Stop Capture
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-chart-bar"></i> Traffic Volume by Protocol
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="trafficProtocolChart" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-exchange-alt"></i> Top Source-Destination Pairs
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="traffic-pairs-list" class="list-group list-group-flush">
+                                            <!-- Traffic pairs will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-project-diagram"></i> Network Traffic Flow
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="network-traffic-flow" class="traffic-flow"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MITRE ATT&CK Tab -->
+                    <div class="tab-pane fade" id="mitre-attack">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">MITRE ATT&CK Framework</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <div class="btn-group me-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="refresh-mitre">
+                                        <i class="fas fa-sync-alt"></i> Refresh
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-chess-board"></i> Attack Matrix
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="mitre-matrix" style="overflow-x: auto;">
+                                            <!-- MITRE matrix will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-project-diagram"></i> Advanced Attack Graph
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="advanced-attack-graph" class="attack-graph"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-list"></i> Detected Techniques
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div id="mitre-techniques-list" class="list-group list-group-flush">
+                                            <!-- MITRE techniques will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card mt-3">
+                                    <div class="card-header">
+                                        <i class="fas fa-info-circle"></i> Attack Details
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="attack-details">
+                                            <p class="text-muted">Select a technique or node to view details</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Analytics Tab -->
+                    <div class="tab-pane fade" id="ai-analytics">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">AI Analytics</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <div class="btn-group me-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="retrain-models">
+                                        <i class="fas fa-brain"></i> Retrain Models
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-cogs"></i> Model Performance
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span>CNN Model</span>
+                                                <span id="cnn-accuracy">0%</span>
+                                            </div>
+                                            <div class="progress mb-2">
+                                                <div id="cnn-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Anomaly Detection</span>
+                                                <span id="anomaly-accuracy">0%</span>
+                                            </div>
+                                            <div class="progress mb-2">
+                                                <div id="anomaly-bar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Ensemble Model</span>
+                                                <span id="ensemble-accuracy">0%</span>
+                                            </div>
+                                            <div class="progress mb-2">
+                                                <div id="ensemble-bar" class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-chart-line"></i> Model Accuracy Over Time
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="modelAccuracyChart" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-bolt"></i> Inference Performance
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row text-center">
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <div class="h4" id="cnn-latency">0ms</div>
+                                                    <small class="text-muted">CNN Latency</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <div class="h4" id="anomaly-latency">0ms</div>
+                                                    <small class="text-muted">Anomaly Latency</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <div class="h4" id="ensemble-latency">0ms</div>
+                                                    <small class="text-muted">Ensemble Latency</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-database"></i> Training Data
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row text-center">
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <div class="h4" id="training-samples">0</div>
+                                                    <small class="text-muted">Training Samples</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <div class="h4" id="validation-samples">0</div>
+                                                    <small class="text-muted">Validation Samples</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <div class="h4" id="test-samples">0</div>
+                                                    <small class="text-muted">Test Samples</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Incident Response Tab -->
+                    <div class="tab-pane fade" id="incident-response">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">Incident Response</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <div class="btn-group me-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="new-incident-btn">
+                                        <i class="fas fa-plus"></i> New Incident
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-list"></i> Active Incidents
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div id="active-incidents-list" class="list-group list-group-flush">
+                                            <!-- Active incidents will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-chart-pie"></i> Incident Statistics
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="incidentStatsChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-history"></i> Incident Timeline
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="incident-timeline">
+                                            <!-- Incident timeline will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Tab -->
+                    <div class="tab-pane fade" id="settings">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">System Settings</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <div class="btn-group me-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="save-settings">
+                                        <i class="fas fa-save"></i> Save Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card settings-section">
+                                    <div class="card-header">
+                                        <i class="fas fa-shield-alt"></i> Security Settings
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Threat Detection Sensitivity</label>
+                                            <select class="form-select" id="detection-sensitivity">
+                                                <option value="low">Low</option>
+                                                <option value="medium" selected>Medium</option>
+                                                <option value="high">High</option>
+                                                <option value="aggressive">Aggressive</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Auto-Block Threats</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="auto-block" checked>
+                                                <label class="form-check-label" for="auto-block">Automatically block detected threats</label>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Quarantine Suspicious Files</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="auto-quarantine" checked>
+                                                <label class="form-check-label" for="auto-quarantine">Automatically quarantine suspicious files</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card settings-section">
+                                    <div class="card-header">
+                                        <i class="fas fa-bell"></i> Alert Settings
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Email Notifications</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="email-notifications" checked>
+                                                <label class="form-check-label" for="email-notifications">Enable email notifications</label>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Alert Threshold</label>
+                                            <select class="form-select" id="alert-threshold">
+                                                <option value="low">Low (All alerts)</option>
+                                                <option value="medium" selected>Medium (Medium and above)</option>
+                                                <option value="high">High (High and critical only)</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Notification Email</label>
+                                            <input type="email" class="form-control" id="notification-email" value="admin@company.com">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card settings-section">
+                                    <div class="card-header">
+                                        <i class="fas fa-network-wired"></i> Network Settings
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Monitoring Interface</label>
+                                            <select class="form-select" id="monitoring-interface">
+                                                <option value="eth0" selected>eth0</option>
+                                                <option value="eth1">eth1</option>
+                                                <option value="any">Any</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Packet Capture Size</label>
+                                            <input type="number" class="form-control" id="packet-capture-size" value="1500" min="64" max="9000">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Max Throughput (Gbps)</label>
+                                            <input type="number" class="form-control" id="max-throughput" value="10" min="1" max="100">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card settings-section">
+                                    <div class="card-header">
+                                        <i class="fas fa-database"></i> Data Retention
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Log Retention Period</label>
+                                            <select class="form-select" id="log-retention">
+                                                <option value="7">7 days</option>
+                                                <option value="30" selected>30 days</option>
+                                                <option value="90">90 days</option>
+                                                <option value="365">1 year</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Threat Data Retention</label>
+                                            <select class="form-select" id="threat-retention">
+                                                <option value="30">30 days</option>
+                                                <option value="90" selected>90 days</option>
+                                                <option value="180">180 days</option>
+                                                <option value="365">1 year</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Max Database Size (GB)</label>
+                                            <input type="number" class="form-control" id="max-db-size" value="100" min="10" max="1000">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card settings-section">
+                                    <div class="card-header">
+                                        <i class="fas fa-cogs"></i> System Configuration
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">System Performance Mode</label>
+                                            <select class="form-select" id="performance-mode">
+                                                <option value="balanced" selected>Balanced</option>
+                                                <option value="performance">Performance</option>
+                                                <option value="conservative">Conservative</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Auto Update</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="auto-update" checked>
+                                                <label class="form-check-label" for="auto-update">Automatically install updates</label>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Backup Configuration</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="auto-backup" checked>
+                                                <label class="form-check-label" for="auto-backup">Automatically backup configuration</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Profile Tab -->
+<div class="tab-pane fade" id="profile">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">User Profile</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="edit-profile-btn">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Profile Card -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-id-card"></i> Profile Information
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <img id="profile-avatar" src="" alt="Profile Avatar"
+                             class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                    </div>
+                    <h4 id="profile-name">John Doe</h4>
+                    <p class="text-muted" id="profile-role">Security Analyst</p>
+                    <p class="text-muted" id="profile-email">john.doe@company.com</p>
+                    <div class="mt-3">
+                        <span class="badge bg-success" id="profile-status">Active</span>
+                        <span class="badge bg-info" id="profile-member-since">Member since Jan 2024</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <i class="fas fa-shield-alt"></i> Security
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Password</h6>
+                        <p class="text-muted">Last changed: <span id="password-last-changed">2 weeks ago</span></p>
+                        <button class="btn btn-outline-primary btn-sm" id="change-password-btn">
+                            Change Password
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Two-Factor Authentication</h6>
+                        <p class="text-muted" id="2fa-status">Not enabled</p>
+                        <button class="btn btn-outline-secondary btn-sm" id="enable-2fa-btn">
+                            Enable 2FA
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <!-- Profile Details Form -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-user-edit"></i> Profile Details
+                </div>
+                <div class="card-body">
+                    <form id="profile-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="profile-first-name" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="profile-first-name"
+                                           placeholder="First Name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="profile-last-name" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="profile-last-name"
+                                           placeholder="Last Name" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="profile-email-input" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="profile-email-input"
+                                   placeholder="Email Address" required readonly>
+                            <div class="form-text">Email cannot be changed. Contact administrator for email changes.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="profile-role-select" class="form-label">Role</label>
+                            <select class="form-control" id="profile-role-select" disabled>
+                                <option value="security_analyst">Security Analyst</option>
+                                <option value="network_admin">Network Administrator</option>
+                                <option value="security_manager">Security Manager</option>
+                                <option value="system_admin">System Administrator</option>
+                            </select>
+                            <div class="form-text">Role changes require administrator approval.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Profile Avatar</label>
+                            <div class="avatar-options-profile">
+                                <div class="avatar-option-profile selected" data-avatar="avatar1.png">
+                                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMzNDk4REIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 1">
+                                </div>
+                                <div class="avatar-option-profile" data-avatar="avatar2.png">
+                                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMyZWNjNzEiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 2">
+                                </div>
+                                <div class="avatar-option-profile" data-avatar="avatar3.png">
+                                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiNmMzljMTIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 3">
+                                </div>
+                                <div class="avatar-option-profile" data-avatar="avatar4.png">
+                                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiM5YjU5YjYiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 4">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="profile-department" class="form-label">Department</label>
+                            <input type="text" class="form-control" id="profile-department"
+                                   placeholder="Department">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="profile-phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="profile-phone"
+                                   placeholder="Phone Number">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="profile-location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="profile-location"
+                                   placeholder="Location">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="profile-bio" class="form-label">Bio</label>
+                            <textarea class="form-control" id="profile-bio" rows="3"
+                                      placeholder="Tell us about yourself..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" id="cancel-edit-btn" style="display: none;">
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="save-profile-btn" disabled>
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Activity Log -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <i class="fas fa-history"></i> Recent Activity
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Activity</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="profile-activity-log">
+                                <!-- Activity log will be populated here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Incident Modal -->
+    <div class="modal fade" id="newIncidentModal" tabindex="-1" aria-labelledby="newIncidentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content incident-modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="newIncidentModalLabel">
+                        <i class="fas fa-plus-circle"></i> Create New Incident
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="new-incident-form">
+                        <div class="incident-form-section">
+                            <h6 class="mb-3"><i class="fas fa-info-circle"></i> Basic Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="incident-title" class="form-label">Incident Title *</label>
+                                        <input type="text" class="form-control" id="incident-title" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="incident-priority" class="form-label">Priority *</label>
+                                        <select class="form-select" id="incident-priority" required>
+                                            <option value="low">Low</option>
+                                            <option value="medium" selected>Medium</option>
+                                            <option value="high">High</option>
+                                            <option value="critical">Critical</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="incident-description" class="form-label">Description *</label>
+                                <textarea class="form-control" id="incident-description" rows="3" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="incident-form-section">
+                            <h6 class="mb-3"><i class="fas fa-network-wired"></i> Network Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="source-ip" class="form-label">Source IP</label>
+                                        <input type="text" class="form-control" id="source-ip" placeholder="192.168.1.100">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="destination-ip" class="form-label">Destination IP</label>
+                                        <input type="text" class="form-control" id="destination-ip" placeholder="10.0.0.50">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="incident-type" class="form-label">Incident Type</label>
+                                        <select class="form-select" id="incident-type">
+                                            <option value="malware">Malware</option>
+                                            <option value="intrusion">Intrusion</option>
+                                            <option value="ddos">DDoS</option>
+                                            <option value="phishing">Phishing</option>
+                                            <option value="data-theft">Data Theft</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="mitre-technique" class="form-label">MITRE ATT&CK Technique</label>
+                                        <select class="form-select" id="mitre-technique">
+                                            <option value="">Select technique...</option>
+                                            <option value="T1566.001">T1566.001 - Phishing</option>
+                                            <option value="T1059.003">T1059.003 - Command Line</option>
+                                            <option value="T1027">T1027 - Obfuscation</option>
+                                            <option value="T1110.001">T1110.001 - Password Guessing</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="incident-form-section">
+                            <h6 class="mb-3"><i class="fas fa-users"></i> Assignment & Response</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="assigned-team" class="form-label">Assigned Team</label>
+                                        <select class="form-select" id="assigned-team">
+                                            <option value="security">Security Team</option>
+                                            <option value="incident-response">Incident Response</option>
+                                            <option value="endpoint-security">Endpoint Security</option>
+                                            <option value="network-security">Network Security</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="response-action" class="form-label">Initial Response Action</label>
+                                        <select class="form-select" id="response-action">
+                                            <option value="investigate">Investigate</option>
+                                            <option value="contain">Contain</option>
+                                            <option value="eradicate">Eradicate</option>
+                                            <option value="recover">Recover</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="incident-notes" class="form-label">Additional Notes</label>
+                                <textarea class="form-control" id="incident-notes" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="create-incident-btn">
+                        <i class="fas fa-save"></i> Create Incident
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Dashboard JavaScript -->
+    <script>
+        // Global variables
+        let socket;
+        let detectionActive = false;
+        let trafficCaptureActive = false;
+        let threatActivityChart, threatDistributionChart, trafficProtocolChart, modelAccuracyChart, incidentStatsChart;
+        let advancedAttackGraph;
+
+        // Initialize dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDashboard();
+            initializeCharts();
+            connectWebSocket();
+            loadInitialData();
+            setupEventListeners();
+            initializeUserProfile();
+            initializeEnhancedProfile();
+            initializeUserData();
+
+        });
+
+        // Initialize dashboard components
+        function initializeDashboard() {
+            console.log('Initializing SentinelAI Dashboard...');
+
+            // Set current date in dashboard
+            const now = new Date();
+            document.getElementById('system-uptime').textContent = `Last Updated: ${now.toLocaleString()}`;
+        }
+
+        // User Management System
+        function initializeUserData() {
+            // Check if users data exists, if not create default data
+            if (!localStorage.getItem('sentinelai_users')) {
+                const defaultUsers = [
+                    {
+                        id: 1,
+                        name: 'John Doe',
+                        email: 'john.doe@company.com',
+                        role: 'security_analyst',
+                        avatar: 'avatar1.png',
+                        password: 'password123', // In real app, this would be hashed
+                        createdAt: new Date().toISOString(),
+                        lastLogin: new Date().toISOString()
+                    }
+                ];
+                localStorage.setItem('sentinelai_users', JSON.stringify(defaultUsers));
+            }
+
+            // Check if session exists, if not create one
+            if (!localStorage.getItem('sentinelai_session')) {
+                const users = JSON.parse(localStorage.getItem('sentinelai_users'));
+                const defaultUser = users[0];
+
+                const session = {
+                    user: defaultUser,
+                    loginTime: new Date().toISOString(),
+                    token: 'demo-token-' + Date.now()
+                };
+                localStorage.setItem('sentinelai_session', JSON.stringify(session));
+            }
+        }
+
+        // Enhanced User Profile Functions
+        function initializeEnhancedProfile() {
+            loadUserProfileData();
+            setupEnhancedProfileEvents();
+        }
+
+        function loadUserProfileData() {
+            const session = localStorage.getItem('sentinelai_session');
+            if (!session) {
+                console.error('No user session found');
+                return;
+            }
+
+            try {
+                const userData = JSON.parse(session).user;
+                const users = JSON.parse(localStorage.getItem('sentinelai_users') || '[]');
+                const user = users.find(u => u.id === userData.id);
+
+                if (user) {
+                    // Update profile display
+                    document.getElementById('profile-name').textContent = user.name;
+                    document.getElementById('profile-role').textContent = formatRole(user.role);
+                    document.getElementById('profile-email').textContent = user.email;
+                    document.getElementById('profile-avatar').src = getAvatarUrl(user.avatar);
+
+                    // Update form fields
+                    const nameParts = user.name.split(' ');
+                    document.getElementById('profile-first-name').value = nameParts[0] || '';
+                    document.getElementById('profile-last-name').value = nameParts.slice(1).join(' ') || '';
+                    document.getElementById('profile-email-input').value = user.email;
+                    document.getElementById('profile-role-select').value = user.role;
+
+                    // Set selected avatar
+                    document.querySelectorAll('.avatar-option-profile').forEach(option => {
+                        option.classList.remove('selected');
+                        if (option.getAttribute('data-avatar') === user.avatar) {
+                            option.classList.add('selected');
+                        }
+                    });
+
+                    // Load additional profile data
+                    loadAdditionalProfileData(user);
+                    loadActivityLog(user.id);
+
+                    // Update security section
+                    updateSecuritySection(user);
+                }
+            } catch (error) {
+                console.error('Error loading profile data:', error);
+            }
+        }
+
+        function loadAdditionalProfileData(user) {
+            const profileData = JSON.parse(localStorage.getItem(`sentinelai_profile_${user.id}`) || '{}');
+
+            document.getElementById('profile-department').value = profileData.department || '';
+            document.getElementById('profile-phone').value = profileData.phone || '';
+            document.getElementById('profile-location').value = profileData.location || '';
+            document.getElementById('profile-bio').value = profileData.bio || '';
+
+            // Update member since
+            const joinDate = new Date(user.createdAt || new Date());
+            document.getElementById('profile-member-since').textContent =
+                `Member since ${joinDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
+        }
+
+        function updateSecuritySection(user) {
+            const securityData = JSON.parse(localStorage.getItem(`sentinelai_security_${user.id}`) || '{}');
+
+            // Update password last changed
+            if (securityData.passwordLastChanged) {
+                const lastChanged = new Date(securityData.passwordLastChanged);
+                const now = new Date();
+                const diffTime = Math.abs(now - lastChanged);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                document.getElementById('password-last-changed').textContent =
+                    diffDays === 1 ? 'yesterday' : `${diffDays} days ago`;
+            }
+
+            // Update 2FA status
+            const twoFAEnabled = securityData.twoFAEnabled || false;
+            document.getElementById('2fa-status').textContent = twoFAEnabled ? 'Enabled' : 'Not enabled';
+            document.getElementById('enable-2fa-btn').textContent =
+                twoFAEnabled ? 'Disable 2FA' : 'Enable 2FA';
+            document.getElementById('enable-2fa-btn').className =
+                twoFAEnabled ? 'btn btn-outline-warning btn-sm' : 'btn btn-outline-secondary btn-sm';
+        }
+
+        function setupEnhancedProfileEvents() {
+            // Avatar selection
+            document.querySelectorAll('.avatar-option-profile').forEach(option => {
+                option.addEventListener('click', function() {
+                    if (!document.getElementById('profile-form').classList.contains('editing')) return;
+
+                    document.querySelectorAll('.avatar-option-profile').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    document.getElementById('save-profile-btn').disabled = false;
+                });
+            });
+
+            // Edit profile button
+            document.getElementById('edit-profile-btn').addEventListener('click', function() {
+                enableProfileEditing();
+            });
+
+            // Cancel edit button
+            document.getElementById('cancel-edit-btn').addEventListener('click', function() {
+                disableProfileEditing();
+                loadUserProfileData(); // Reload original data
+            });
+
+            // Form submission
+            document.getElementById('profile-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveProfileChanges();
+            });
+
+            // Form field changes
+            const formFields = document.querySelectorAll('#profile-form input, #profile-form textarea, #profile-form select');
+            formFields.forEach(field => {
+                field.addEventListener('input', function() {
+                    if (document.getElementById('profile-form').classList.contains('editing')) {
+                        document.getElementById('save-profile-btn').disabled = false;
+                    }
+                });
+            });
+
+            // Change password button
+            document.getElementById('change-password-btn').addEventListener('click', function() {
+                showChangePasswordModal();
+            });
+
+            // Enable 2FA button
+            document.getElementById('enable-2fa-btn').addEventListener('click', function() {
+                toggle2FA();
+            });
+        }
+
+        function enableProfileEditing() {
+            const form = document.getElementById('profile-form');
+            form.classList.add('editing');
+
+            // Enable editable fields
+            const editableFields = [
+                'profile-first-name',
+                'profile-last-name',
+                'profile-department',
+                'profile-phone',
+                'profile-location',
+                'profile-bio'
+            ];
+
+            editableFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.readOnly = false;
+                    field.disabled = false;
+                }
+            });
+
+            // Show cancel button
+            document.getElementById('cancel-edit-btn').style.display = 'block';
+
+            // Enable avatar selection
+            document.querySelectorAll('.avatar-option-profile').forEach(option => {
+                option.style.cursor = 'pointer';
+            });
+        }
+
+        function disableProfileEditing() {
+            const form = document.getElementById('profile-form');
+            form.classList.remove('editing');
+
+            // Disable fields
+            const editableFields = [
+                'profile-first-name',
+                'profile-last-name',
+                'profile-department',
+                'profile-phone',
+                'profile-location',
+                'profile-bio'
+            ];
+
+            editableFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.readOnly = true;
+                    field.disabled = false;
+                }
+            });
+
+            // Hide cancel button
+            document.getElementById('cancel-edit-btn').style.display = 'none';
+            document.getElementById('save-profile-btn').disabled = true;
+
+            // Disable avatar selection
+            document.querySelectorAll('.avatar-option-profile').forEach(option => {
+                option.style.cursor = 'default';
+            });
+        }
+
+        function saveProfileChanges() {
+            const session = localStorage.getItem('sentinelai_session');
+            if (!session) {
+                alert('Please log in to save profile changes.');
+                return;
+            }
+
+            try {
+                const userData = JSON.parse(session).user;
+                const users = JSON.parse(localStorage.getItem('sentinelai_users') || '[]');
+                const userIndex = users.findIndex(u => u.id === userData.id);
+
+                if (userIndex !== -1) {
+                    // Get form values
+                    const firstName = document.getElementById('profile-first-name').value.trim();
+                    const lastName = document.getElementById('profile-last-name').value.trim();
+                    const selectedAvatar = document.querySelector('.avatar-option-profile.selected')?.getAttribute('data-avatar') || 'avatar1.png';
+
+                    if (!firstName || !lastName) {
+                        alert('First name and last name are required.');
+                        return;
+                    }
+
+                    // Update user data
+                    users[userIndex].name = `${firstName} ${lastName}`;
+                    users[userIndex].avatar = selectedAvatar;
+
+                    // Save extended profile data
+                    const profileData = {
+                        department: document.getElementById('profile-department').value.trim(),
+                        phone: document.getElementById('profile-phone').value.trim(),
+                        location: document.getElementById('profile-location').value.trim(),
+                        bio: document.getElementById('profile-bio').value.trim(),
+                        lastUpdated: new Date().toISOString()
+                    };
+
+                    localStorage.setItem(`sentinelai_profile_${userData.id}`, JSON.stringify(profileData));
+                    localStorage.setItem('sentinelai_users', JSON.stringify(users));
+
+                    // Update session
+                    const updatedSession = JSON.parse(session);
+                    updatedSession.user.name = users[userIndex].name;
+                    updatedSession.user.avatar = users[userIndex].avatar;
+                    localStorage.setItem('sentinelai_session', JSON.stringify(updatedSession));
+
+                    // Update UI
+                    loadUserProfileData();
+                    disableProfileEditing();
+                    updateNavigationProfile();
+
+                    // Show success message
+                    showProfileAlert('Profile updated successfully!', 'success');
+
+                    // Log activity
+                    logProfileActivity(userData.id, 'Profile updated');
+                } else {
+                    alert('User not found. Please log in again.');
+                }
+            } catch (error) {
+                console.error('Error saving profile:', error);
+                alert('Error saving profile changes. Please try again.');
+            }
+        }
+
+        function showChangePasswordModal() {
+            const newPassword = prompt('Enter new password (min 8 characters):');
+            if (newPassword) {
+                if (newPassword.length < 8) {
+                    alert('Password must be at least 8 characters long.');
+                    return;
+                }
+
+                const confirmPassword = prompt('Confirm new password:');
+                if (newPassword !== confirmPassword) {
+                    alert('Passwords do not match.');
+                    return;
+                }
+
+                // Save password (in real app, this would be hashed and sent to backend)
+                const session = localStorage.getItem('sentinelai_session');
+                if (session) {
+                    const userData = JSON.parse(session).user;
+                    const securityData = JSON.parse(localStorage.getItem(`sentinelai_security_${userData.id}`) || '{}');
+
+                    securityData.passwordLastChanged = new Date().toISOString();
+                    localStorage.setItem(`sentinelai_security_${userData.id}`, JSON.stringify(securityData));
+
+                    showProfileAlert('Password changed successfully!', 'success');
+                    logProfileActivity(userData.id, 'Password changed');
+                    updateSecuritySection(userData);
+                }
+            }
+        }
+
+        function toggle2FA() {
+            const session = localStorage.getItem('sentinelai_session');
+            if (!session) return;
+
+            const userData = JSON.parse(session).user;
+            const securityData = JSON.parse(localStorage.getItem(`sentinelai_security_${userData.id}`) || '{}');
+
+            const currentlyEnabled = securityData.twoFAEnabled || false;
+
+            if (!currentlyEnabled) {
+                // Enable 2FA
+                const confirmation = confirm('Enable Two-Factor Authentication? You will need to use an authenticator app for future logins.');
+                if (confirmation) {
+                    securityData.twoFAEnabled = true;
+                    securityData.twoFAEnabledAt = new Date().toISOString();
+
+                    // Generate and show QR code (simulated)
+                    const secretKey = generate2FASecret();
+                    alert(`2FA Setup:\n\nSecret Key: ${secretKey}\n\nPlease save this key and use it in your authenticator app.`);
+                }
+            } else {
+                // Disable 2FA
+                const confirmation = confirm('Disable Two-Factor Authentication? This will reduce your account security.');
+                if (confirmation) {
+                    securityData.twoFAEnabled = false;
+                    securityData.twoFADisabledAt = new Date().toISOString();
+                }
+            }
+
+            localStorage.setItem(`sentinelai_security_${userData.id}`, JSON.stringify(securityData));
+            updateSecuritySection(userData);
+
+            const message = securityData.twoFAEnabled ? '2FA enabled successfully!' : '2FA disabled.';
+            showProfileAlert(message, securityData.twoFAEnabled ? 'success' : 'warning');
+            logProfileActivity(userData.id, `2FA ${securityData.twoFAEnabled ? 'enabled' : 'disabled'}`);
+        }
+
+        function generate2FASecret() {
+            // Generate a random secret key (in real app, use proper crypto)
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            let secret = '';
+            for (let i = 0; i < 32; i++) {
+                secret += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return secret;
+        }
+
+        function loadActivityLog(userId) {
+            const activities = JSON.parse(localStorage.getItem(`sentinelai_activities_${userId}`) || '[]');
+            const activityLog = document.getElementById('profile-activity-log');
+
+            activityLog.innerHTML = '';
+
+            // Show recent activities (last 5)
+            const recentActivities = activities.slice(-5).reverse();
+
+            if (recentActivities.length === 0) {
+                activityLog.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">No recent activity</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            recentActivities.forEach(activity => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(activity.timestamp).toLocaleDateString()}</td>
+                    <td>${activity.action}</td>
+                    <td>${activity.ip || 'N/A'}</td>
+                `;
+                activityLog.appendChild(row);
+            });
+        }
+
+        function logProfileActivity(userId, action) {
+            const activities = JSON.parse(localStorage.getItem(`sentinelai_activities_${userId}`) || '[]');
+
+            activities.push({
+                action: action,
+                timestamp: new Date().toISOString(),
+                ip: '127.0.0.1' // In real app, this would be the actual IP
+            });
+
+            // Keep only last 50 activities
+            if (activities.length > 50) {
+                activities.splice(0, activities.length - 50);
+            }
+
+            localStorage.setItem(`sentinelai_activities_${userId}`, JSON.stringify(activities));
+            loadActivityLog(userId);
+        }
+
+        function formatRole(role) {
+            return role.split('_').map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+        }
+
+        function showProfileAlert(message, type) {
+            // Remove existing alerts
+            document.querySelectorAll('.profile-alert').forEach(alert => alert.remove());
+
+            // Create new alert
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show profile-alert`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            const profileHeader = document.querySelector('#profile .border-bottom');
+            profileHeader.parentNode.insertBefore(alert, profileHeader.nextSibling);
+
+            // Remove alert after 5 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+
+        function updateNavigationProfile() {
+            // Update navigation with new profile data
+            initializeUserProfile();
+        }
+
+        // Initialize all charts
+        function initializeCharts() {
+            // Threat Activity Chart
+            const threatActivityCtx = document.getElementById('threatActivityChart').getContext('2d');
+            threatActivityChart = new Chart(threatActivityCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Threats Blocked',
+                            data: [],
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Threats Detected',
+                            data: [],
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Profile Management Functions
+            function initializeProfileSection() {
+                loadProfileData();
+                setupProfileEventListeners();
+            }
+
+            function loadProfileData() {
+                const session = localStorage.getItem('sentinelai_session');
+                if (!session) return;
+
+                const userData = JSON.parse(session).user;
+                const users = JSON.parse(localStorage.getItem('sentinelai_users') || '[]');
+                const user = users.find(u => u.id === userData.id);
+
+                if (user) {
+                    // Update profile display
+                    document.getElementById('profile-name').textContent = user.name;
+                    document.getElementById('profile-role').textContent = formatRole(user.role);
+                    document.getElementById('profile-email').textContent = user.email;
+                    document.getElementById('profile-avatar').src = getAvatarUrl(user.avatar);
+
+                    // Update form fields
+                    const nameParts = user.name.split(' ');
+                    document.getElementById('profile-first-name').value = nameParts[0] || '';
+                    document.getElementById('profile-last-name').value = nameParts.slice(1).join(' ') || '';
+                    document.getElementById('profile-email-input').value = user.email;
+                    document.getElementById('profile-role-select').value = user.role;
+
+                    // Set selected avatar
+                    document.querySelectorAll('.avatar-option-profile').forEach(option => {
+                        option.classList.remove('selected');
+                        if (option.getAttribute('data-avatar') === user.avatar) {
+                            option.classList.add('selected');
+                        }
+                    });
+
+                    // Load additional profile data
+                    loadAdditionalProfileData(user);
+                    loadActivityLog(user.id);
+                }
+            }
+
+            function loadAdditionalProfileData(user) {
+                // Load extended profile data from localStorage
+                const profileData = JSON.parse(localStorage.getItem(`sentinelai_profile_${user.id}`) || '{}');
+
+                document.getElementById('profile-department').value = profileData.department || '';
+                document.getElementById('profile-phone').value = profileData.phone || '';
+                document.getElementById('profile-location').value = profileData.location || '';
+                document.getElementById('profile-bio').value = profileData.bio || '';
+
+                // Update member since
+                const joinDate = new Date(user.createdAt || new Date());
+                document.getElementById('profile-member-since').textContent =
+                    `Member since ${joinDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
+            }
+
+            function setupProfileEventListeners() {
+                // Avatar selection
+                document.querySelectorAll('.avatar-option-profile').forEach(option => {
+                    option.addEventListener('click', function() {
+                        if (!document.getElementById('profile-form').classList.contains('editing')) return;
+
+                        document.querySelectorAll('.avatar-option-profile').forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        this.classList.add('selected');
+                        document.getElementById('save-profile-btn').disabled = false;
+                    });
+                });
+
+                // Edit profile button
+                document.getElementById('edit-profile-btn').addEventListener('click', function() {
+                    enableProfileEditing();
+                });
+
+                // Cancel edit button
+                document.getElementById('cancel-edit-btn').addEventListener('click', function() {
+                    disableProfileEditing();
+                    loadProfileData(); // Reload original data
+                });
+
+                // Form submission
+                document.getElementById('profile-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    saveProfileChanges();
+                });
+
+                // Form field changes
+                const formFields = document.querySelectorAll('#profile-form input, #profile-form textarea');
+                formFields.forEach(field => {
+                    field.addEventListener('input', function() {
+                        if (document.getElementById('profile-form').classList.contains('editing')) {
+                            document.getElementById('save-profile-btn').disabled = false;
+                        }
+                    });
+                });
+
+                // Change password button
+                document.getElementById('change-password-btn').addEventListener('click', function() {
+                    showChangePasswordModal();
+                });
+            }
+
+            function enableProfileEditing() {
+                const form = document.getElementById('profile-form');
+                form.classList.add('editing');
+
+                // Enable editable fields
+                document.getElementById('profile-first-name').readOnly = false;
+                document.getElementById('profile-last-name').readOnly = false;
+                document.getElementById('profile-department').readOnly = false;
+                document.getElementById('profile-phone').readOnly = false;
+                document.getElementById('profile-location').readOnly = false;
+                document.getElementById('profile-bio').readOnly = false;
+
+                // Show cancel button
+                document.getElementById('cancel-edit-btn').style.display = 'block';
+
+                // Enable avatar selection
+                document.querySelectorAll('.avatar-option-profile').forEach(option => {
+                    option.style.cursor = 'pointer';
+                });
+            }
+
+            function disableProfileEditing() {
+                const form = document.getElementById('profile-form');
+                form.classList.remove('editing');
+
+                // Disable fields
+                document.getElementById('profile-first-name').readOnly = true;
+                document.getElementById('profile-last-name').readOnly = true;
+                document.getElementById('profile-department').readOnly = true;
+                document.getElementById('profile-phone').readOnly = true;
+                document.getElementById('profile-location').readOnly = true;
+                document.getElementById('profile-bio').readOnly = true;
+
+                // Hide cancel button
+                document.getElementById('cancel-edit-btn').style.display = 'none';
+                document.getElementById('save-profile-btn').disabled = true;
+
+                // Disable avatar selection
+                document.querySelectorAll('.avatar-option-profile').forEach(option => {
+                    option.style.cursor = 'default';
+                });
+            }
+
+            function saveProfileChanges() {
+                const session = localStorage.getItem('sentinelai_session');
+                if (!session) return;
+
+                const userData = JSON.parse(session).user;
+                const users = JSON.parse(localStorage.getItem('sentinelai_users') || '[]');
+                const userIndex = users.findIndex(u => u.id === userData.id);
+
+                if (userIndex !== -1) {
+                    // Get form values
+                    const firstName = document.getElementById('profile-first-name').value;
+                    const lastName = document.getElementById('profile-last-name').value;
+                    const selectedAvatar = document.querySelector('.avatar-option-profile.selected').getAttribute('data-avatar');
+
+                    // Update user data
+                    users[userIndex].name = `${firstName} ${lastName}`;
+                    users[userIndex].avatar = selectedAvatar;
+
+                    // Save extended profile data
+                    const profileData = {
+                        department: document.getElementById('profile-department').value,
+                        phone: document.getElementById('profile-phone').value,
+                        location: document.getElementById('profile-location').value,
+                        bio: document.getElementById('profile-bio').value,
+                        lastUpdated: new Date().toISOString()
+                    };
+
+                    localStorage.setItem(`sentinelai_profile_${userData.id}`, JSON.stringify(profileData));
+                    localStorage.setItem('sentinelai_users', JSON.stringify(users));
+
+                    // Update session
+                    const updatedSession = JSON.parse(session);
+                    updatedSession.user.name = users[userIndex].name;
+                    updatedSession.user.avatar = users[userIndex].avatar;
+                    localStorage.setItem('sentinelai_session', JSON.stringify(updatedSession));
+
+                    // Update UI
+                    loadProfileData();
+                    disableProfileEditing();
+                    updateNavigationProfile();
+
+                    // Show success message
+                    showProfileAlert('Profile updated successfully!', 'success');
+
+                    // Log activity
+                    logProfileActivity(userData.id, 'Profile updated');
+                }
+            }
+
+            function loadActivityLog(userId) {
+                const activities = JSON.parse(localStorage.getItem(`sentinelai_activities_${userId}`) || '[]');
+                const activityLog = document.getElementById('profile-activity-log');
+
+                activityLog.innerHTML = '';
+
+                // Show recent activities (last 5)
+                const recentActivities = activities.slice(-5).reverse();
+
+                recentActivities.forEach(activity => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${new Date(activity.timestamp).toLocaleDateString()}</td>
+                        <td>${activity.action}</td>
+                        <td>${activity.ip || 'N/A'}</td>
+                    `;
+                    activityLog.appendChild(row);
+                });
+            }
+
+            function logProfileActivity(userId, action) {
+                const activities = JSON.parse(localStorage.getItem(`sentinelai_activities_${userId}`) || '[]');
+
+                activities.push({
+                    action: action,
+                    timestamp: new Date().toISOString(),
+                    ip: '127.0.0.1' // In real app, this would be the actual IP
+                });
+
+                localStorage.setItem(`sentinelai_activities_${userId}`, JSON.stringify(activities));
+                loadActivityLog(userId);
+            }
+
+            function formatRole(role) {
+                return role.split('_').map(word =>
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+            }
+
+            function showProfileAlert(message, type) {
+                // Create temporary alert
+                const alert = document.createElement('div');
+                alert.className = `alert alert-${type} alert-dismissible fade show`;
+                alert.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                const profileHeader = document.querySelector('#profile .border-bottom');
+                profileHeader.parentNode.insertBefore(alert, profileHeader.nextSibling);
+
+                // Remove alert after 5 seconds
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 5000);
+            }
+
+            function showChangePasswordModal() {
+                // Simple implementation - in real app, this would be a proper modal
+                const newPassword = prompt('Enter new password:');
+                if (newPassword && newPassword.length >= 8) {
+                    showProfileAlert('Password changed successfully!', 'success');
+                    logProfileActivity(JSON.parse(localStorage.getItem('sentinelai_session')).user.id, 'Password changed');
+                } else if (newPassword) {
+                    alert('Password must be at least 8 characters long');
+                }
+            }
+
+            function updateNavigationProfile() {
+                // Update navigation with new profile data
+                initializeUserProfile();
+            }
+
+            // Threat Distribution Chart
+            const threatDistributionCtx = document.getElementById('threatDistributionChart').getContext('2d');
+            threatDistributionChart = new Chart(threatDistributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Malware', 'Intrusion', 'DDoS', 'Phishing', 'Data Exfiltration'],
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            '#e74c3c',
+                            '#3498db',
+                            '#f39c12',
+                            '#9b59b6',
+                            '#1abc9c'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+
+            // Traffic Protocol Chart
+            const trafficProtocolCtx = document.getElementById('trafficProtocolChart').getContext('2d');
+            trafficProtocolChart = new Chart(trafficProtocolCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['HTTP', 'HTTPS', 'DNS', 'SSH', 'FTP', 'SMTP'],
+                    datasets: [{
+                        label: 'Traffic Volume (MB)',
+                        data: [0, 0, 0, 0, 0, 0],
+                        backgroundColor: '#3498db'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Model Accuracy Chart
+            const modelAccuracyCtx = document.getElementById('modelAccuracyChart').getContext('2d');
+            modelAccuracyChart = new Chart(modelAccuracyCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'CNN Model',
+                            data: [],
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Anomaly Detection',
+                            data: [],
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Ensemble Model',
+                            data: [],
+                            borderColor: '#9b59b6',
+                            backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Incident Stats Chart
+            const incidentStatsCtx = document.getElementById('incidentStatsChart').getContext('2d');
+            incidentStatsChart = new Chart(incidentStatsCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Low', 'Medium', 'High', 'Critical'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: [
+                            '#27ae60',
+                            '#f39c12',
+                            '#e74c3c',
+                            '#8e44ad'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        // Connect to WebSocket for real-time updates
+        function connectWebSocket() {
+            // In a real implementation, this would connect to your backend
+            // For demonstration, we'll simulate WebSocket behavior
+            console.log('Connecting to WebSocket server...');
+
+            // Simulate WebSocket connection
+            socket = {
+                on: function(event, callback) {
+                    if (event === 'connect') {
+                        setTimeout(callback, 100);
+                    }
+                },
+                emit: function(event, data) {
+                    console.log(`WebSocket emit: ${event}`, data);
+                }
+            };
+
+            socket.on('connect', function() {
+                console.log('WebSocket connected');
+                updateConnectionStatus(true);
+            });
+
+            // Simulate receiving real-time data
+            setInterval(simulateRealTimeData, 3000);
+        }
+
+        // Authentication and User Profile Management
+function initializeUserProfile() {
+    const session = localStorage.getItem('sentinelai_session');
+
+    if (!session) {
+        // Redirect to login if no session exists
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const userData = JSON.parse(session).user;
+
+    // Update user information in navbar
+    document.getElementById('user-name').textContent = userData.name;
+    document.getElementById('user-avatar').src = getAvatarUrl(userData.avatar);
+
+    // Update user role in dashboard if needed
+    updateUserRoleDisplay(userData.role);
+}
+
+function getAvatarUrl(avatar) {
+    // Return appropriate avatar URL based on avatar name
+    const avatarMap = {
+        'avatar1.png': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMzNDk4REIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==',
+        'avatar2.png': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMyZWNjNzEiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==',
+        'avatar3.png': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiNmMzljMTIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==',
+        'avatar4.png': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiM5YjU5YjYiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg=='
+    };
+
+    return avatarMap[avatar] || avatarMap['avatar1.png'];
+}
+
+function updateUserRoleDisplay(role) {
+    // Update dashboard based on user role
+    const roleDisplay = document.getElementById('user-role-display');
+    if (roleDisplay) {
+        roleDisplay.textContent = role.replace('_', ' ').toUpperCase();
+    }
+
+    // You can add role-based UI modifications here
+    if (role === 'security_analyst') {
+        // Enable specific features for security analysts
+    } else if (role === 'network_admin') {
+        // Enable network admin features
+    }
+}
+
+function logout() {
+    // Clear session and redirect to login
+    localStorage.removeItem('sentinelai_session');
+    window.location.href = 'login.html';
+}
+
+// Add logout functionality
+document.addEventListener('DOMContentLoaded', function() {
+    initializeUserProfile();
+
+    // Add logout event listener
+    document.getElementById('logout-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        logout();
+    });
+});
+
+        // Load initial data
+        function loadInitialData() {
+            // Load dashboard metrics
+            updateDashboardMetrics();
+
+            // Load recent incidents
+            loadRecentIncidents();
+
+            // Load threat detection data
+            loadThreatDetectionData();
+
+            // Load network traffic data
+            loadNetworkTrafficData();
+
+            // Load MITRE ATT&CK data
+            loadMitreAttackData();
+
+            // Load AI analytics data
+            loadAiAnalyticsData();
+
+            // Load incident response data
+            loadIncidentResponseData();
+
+            // Load settings
+            loadSettings();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Refresh dashboard
+            document.getElementById('refresh-dashboard').addEventListener('click', function() {
+                updateDashboardMetrics();
+            });
+
+            // View all incidents button
+            document.getElementById('view-all-incidents').addEventListener('click', function() {
+                // Switch to incident response tab
+                const incidentTab = document.querySelector('a[href="#incident-response"]');
+                if (incidentTab) {
+                    const tab = new bootstrap.Tab(incidentTab);
+                    tab.show();
+                }
+            });
+
+            // Threat detection controls
+            document.getElementById('start-detection').addEventListener('click', function() {
+                startThreatDetection();
+            });
+
+            document.getElementById('stop-detection').addEventListener('click', function() {
+                stopThreatDetection();
+            });
+
+            // Traffic capture controls
+            document.getElementById('start-traffic-capture').addEventListener('click', function() {
+                startTrafficCapture();
+            });
+
+            document.getElementById('stop-traffic-capture').addEventListener('click', function() {
+                stopTrafficCapture();
+            });
+
+            // MITRE ATT&CK refresh
+            document.getElementById('refresh-mitre').addEventListener('click', function() {
+                loadMitreAttackData();
+            });
+
+            // AI model retraining
+            document.getElementById('retrain-models').addEventListener('click', function() {
+                retrainModels();
+            });
+
+            // New incident button
+            document.getElementById('new-incident-btn').addEventListener('click', function() {
+                showNewIncidentModal();
+            });
+
+            // Create incident button
+            document.getElementById('create-incident-btn').addEventListener('click', function() {
+                createNewIncident();
+            });
+
+            // Save settings
+            document.getElementById('save-settings').addEventListener('click', function() {
+                saveSettings();
+            });
+        }
+
+        // Update dashboard metrics
+        function updateDashboardMetrics() {
+            // Simulate API call to get metrics
+            setTimeout(() => {
+                // Update metrics with realistic data
+                document.getElementById('threats-blocked').textContent = Math.floor(Math.random() * 1000) + 500;
+                document.getElementById('threats-today').textContent = `Today: ${Math.floor(Math.random() * 50) + 10}`;
+                document.getElementById('active-incidents').textContent = Math.floor(Math.random() * 10) + 1;
+                document.getElementById('incidents-critical').textContent = `Critical: ${Math.floor(Math.random() * 3)}`;
+                document.getElementById('detection-rate').textContent = `${(Math.random() * 10 + 95).toFixed(1)}%`;
+                document.getElementById('false-positive-rate').textContent = `False Positives: ${(Math.random() * 2).toFixed(1)}%`;
+
+                // Update performance metrics
+                document.getElementById('throughput-value').textContent = `${(Math.random() * 5 + 2).toFixed(1)} Gbps`;
+                document.getElementById('throughput-bar').style.width = `${Math.random() * 30 + 20}%`;
+
+                document.getElementById('latency-value').textContent = `${Math.floor(Math.random() * 10 + 5)} ms`;
+                document.getElementById('latency-bar').style.width = `${Math.random() * 20 + 10}%`;
+
+                document.getElementById('cpu-usage').textContent = `${Math.floor(Math.random() * 30 + 10)}%`;
+                document.getElementById('cpu-bar').style.width = `${Math.floor(Math.random() * 30 + 10)}%`;
+
+                document.getElementById('memory-usage').textContent = `${Math.floor(Math.random() * 200 + 400)} MB`;
+                document.getElementById('memory-bar').style.width = `${Math.floor(Math.random() * 40 + 20)}%`;
+
+                // Update threat levels
+                document.getElementById('low-threats').textContent = Math.floor(Math.random() * 50) + 10;
+                document.getElementById('medium-threats').textContent = Math.floor(Math.random() * 20) + 5;
+                document.getElementById('high-threats').textContent = Math.floor(Math.random() * 10) + 1;
+
+                // Update security score
+                const securityScore = Math.floor(Math.random() * 10 + 90);
+                document.getElementById('security-score').textContent = `${securityScore}%`;
+                document.getElementById('security-score-bar').style.width = `${securityScore}%`;
+
+                // Update threat activity chart
+                updateThreatActivityChart();
+
+                // Update last updated time
+                const now = new Date();
+                document.getElementById('system-uptime').textContent = `Last Updated: ${now.toLocaleString()}`;
+            }, 500);
+        }
+
+        // Update threat activity chart with new data
+        function updateThreatActivityChart() {
+            const now = new Date();
+            const labels = [];
+            const blockedData = [];
+            const detectedData = [];
+
+            // Generate data for last 24 hours
+            for (let i = 23; i >= 0; i--) {
+                const time = new Date(now);
+                time.setHours(now.getHours() - i);
+                labels.push(time.getHours() + ':00');
+
+                blockedData.push(Math.floor(Math.random() * 20) + 5);
+                detectedData.push(Math.floor(Math.random() * 25) + 10);
+            }
+
+            threatActivityChart.data.labels = labels;
+            threatActivityChart.data.datasets[0].data = blockedData;
+            threatActivityChart.data.datasets[1].data = detectedData;
+            threatActivityChart.update();
+        }
+
+        // Load recent incidents
+        function loadRecentIncidents() {
+            const incidents = [
+                {
+                    id: 1,
+                    title: 'Suspicious SSH Login Attempt',
+                    severity: 'high',
+                    timestamp: new Date(Date.now() - 300000).toLocaleString(),
+                    source: '192.168.1.100',
+                    status: 'Investigating'
+                },
+                {
+                    id: 2,
+                    title: 'Potential Data Exfiltration',
+                    severity: 'critical',
+                    timestamp: new Date(Date.now() - 900000).toLocaleString(),
+                    source: '10.0.0.45',
+                    status: 'Contained'
+                },
+                {
+                    id: 3,
+                    title: 'Malware Detected',
+                    severity: 'medium',
+                    timestamp: new Date(Date.now() - 1800000).toLocaleString(),
+                    source: '192.168.1.203',
+                    status: 'Resolved'
+                },
+                {
+                    id: 4,
+                    title: 'DDoS Attack Attempt',
+                    severity: 'high',
+                    timestamp: new Date(Date.now() - 3600000).toLocaleString(),
+                    source: 'External',
+                    status: 'Mitigated'
+                }
+            ];
+
+            const incidentsList = document.getElementById('recent-incidents-list');
+            incidentsList.innerHTML = '';
+
+            incidents.forEach(incident => {
+                const severityClass = `incident-${incident.severity}`;
+                const severityText = incident.severity.charAt(0).toUpperCase() + incident.severity.slice(1);
+
+                const incidentElement = document.createElement('div');
+                incidentElement.className = `list-group-item list-group-item-action incident-card ${severityClass}`;
+                incidentElement.innerHTML = `
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${incident.title}</h6>
+                        <small class="text-muted">${incident.timestamp}</small>
+                    </div>
+                    <p class="mb-1">Source: ${incident.source}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Status: ${incident.status}</small>
+                        <span class="badge bg-${getSeverityBadgeColor(incident.severity)}">${severityText}</span>
+                    </div>
+                `;
+
+                incidentsList.appendChild(incidentElement);
+            });
+        }
+
+        // Get badge color based on severity
+        function getSeverityBadgeColor(severity) {
+            switch(severity) {
+                case 'low': return 'success';
+                case 'medium': return 'warning';
+                case 'high': return 'danger';
+                case 'critical': return 'dark';
+                default: return 'secondary';
+            }
+        }
+
+        // Start threat detection
+        function startThreatDetection() {
+            detectionActive = true;
+            document.getElementById('start-detection').disabled = true;
+            document.getElementById('stop-detection').disabled = false;
+
+            // Add log entry
+            addThreatDetectionLog('Threat detection started', 'info');
+
+            // Simulate threat detection
+            simulateThreatDetection();
+        }
+
+        // Stop threat detection
+        function stopThreatDetection() {
+            detectionActive = false;
+            document.getElementById('start-detection').disabled = false;
+            document.getElementById('stop-detection').disabled = true;
+
+            // Add log entry
+            addThreatDetectionLog('Threat detection stopped', 'info');
+        }
+
+        // Add entry to threat detection log
+        function addThreatDetectionLog(message, level) {
+            const logContainer = document.getElementById('threat-detection-log');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${level}`;
+
+            const timestamp = new Date().toLocaleTimeString();
+            logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> ${message}`;
+
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+
+            // Limit log entries
+            if (logContainer.children.length > 100) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+        }
+
+        // Simulate threat detection
+        function simulateThreatDetection() {
+            if (!detectionActive) return;
+
+            const threatTypes = ['Malware', 'Intrusion', 'DDoS', 'Phishing', 'Data Exfiltration'];
+            const severities = ['low', 'medium', 'high', 'critical'];
+            const actions = ['Blocked', 'Quarantined', 'Alerted', 'Monitored'];
+
+            const threatType = threatTypes[Math.floor(Math.random() * threatTypes.length)];
+            const severity = severities[Math.floor(Math.random() * severities.length)];
+            const action = actions[Math.floor(Math.random() * actions.length)];
+
+            const sourceIP = `192.168.1.${Math.floor(Math.random() * 254) + 1}`;
+            const destIP = `10.0.0.${Math.floor(Math.random() * 254) + 1}`;
+
+            // Add to log
+            addThreatDetectionLog(`<strong>${threatType}</strong> detected from ${sourceIP} to ${destIP} - ${action}`,
+                                 severity === 'critical' || severity === 'high' ? 'error' : 'warning');
+
+            // Add to threats table
+            addThreatToTable({
+                timestamp: new Date().toLocaleString(),
+                source: sourceIP,
+                destination: destIP,
+                type: threatType,
+                severity: severity,
+                action: action
+            });
+
+            // Update threat distribution chart
+            updateThreatDistribution(threatType);
+
+            // Schedule next detection
+            setTimeout(simulateThreatDetection, Math.random() * 3000 + 1000);
+        }
+
+        // Add threat to threats table
+        function addThreatToTable(threat) {
+            const tableBody = document.querySelector('#threats-table tbody');
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td>${threat.timestamp}</td>
+                <td>${threat.source}</td>
+                <td>${threat.destination}</td>
+                <td>${threat.type}</td>
+                <td><span class="badge bg-${getSeverityBadgeColor(threat.severity)}">${threat.severity}</span></td>
+                <td>${threat.action}</td>
+            `;
+
+            tableBody.appendChild(row);
+
+            // Limit table rows
+            if (tableBody.children.length > 50) {
+                tableBody.removeChild(tableBody.firstChild);
+            }
+        }
+
+        // Update threat distribution chart
+        function updateThreatDistribution(threatType) {
+            const threatLabels = threatDistributionChart.data.labels;
+            const index = threatLabels.indexOf(threatType);
+
+            if (index !== -1) {
+                threatDistributionChart.data.datasets[0].data[index]++;
+                threatDistributionChart.update();
+            }
+        }
+
+        // Load threat detection data
+        function loadThreatDetectionData() {
+            // Initialize threat distribution with some data
+            threatDistributionChart.data.datasets[0].data = [15, 8, 5, 12, 3];
+            threatDistributionChart.update();
+
+            // Add some initial threats to table
+            const initialThreats = [
+                {
+                    timestamp: new Date(Date.now() - 60000).toLocaleString(),
+                    source: '192.168.1.50',
+                    destination: '10.0.0.100',
+                    type: 'Malware',
+                    severity: 'high',
+                    action: 'Blocked'
+                },
+                {
+                    timestamp: new Date(Date.now() - 120000).toLocaleString(),
+                    source: '192.168.1.75',
+                    destination: '10.0.0.150',
+                    type: 'Phishing',
+                    severity: 'medium',
+                    action: 'Quarantined'
+                },
+                {
+                    timestamp: new Date(Date.now() - 180000).toLocaleString(),
+                    source: 'External',
+                    destination: '10.0.0.200',
+                    type: 'DDoS',
+                    severity: 'critical',
+                    action: 'Mitigated'
+                }
+            ];
+
+            initialThreats.forEach(threat => addThreatToTable(threat));
+        }
+
+        // Start traffic capture
+        function startTrafficCapture() {
+            trafficCaptureActive = true;
+            document.getElementById('start-traffic-capture').disabled = true;
+            document.getElementById('stop-traffic-capture').disabled = false;
+
+            // Initialize network traffic flow visualization
+            initializeNetworkTrafficFlow();
+
+            // Simulate traffic capture
+            simulateTrafficCapture();
+        }
+
+        // Stop traffic capture
+        function stopTrafficCapture() {
+            trafficCaptureActive = false;
+            document.getElementById('start-traffic-capture').disabled = false;
+            document.getElementById('stop-traffic-capture').disabled = true;
+        }
+
+        // Initialize network traffic flow visualization
+        function initializeNetworkTrafficFlow() {
+            const container = document.getElementById('network-traffic-flow');
+
+            // Create nodes and edges for network visualization
+            const nodes = new vis.DataSet([
+                { id: 1, label: 'Internet', color: '#3498db', shape: 'box' },
+                { id: 2, label: 'Firewall', color: '#e74c3c', shape: 'diamond' },
+                { id: 3, label: 'Web Server', color: '#2ecc71', shape: 'ellipse' },
+                { id: 4, label: 'Database', color: '#f39c12', shape: 'ellipse' },
+                { id: 5, label: 'User PC', color: '#9b59b6', shape: 'ellipse' },
+                { id: 6, label: 'Admin PC', color: '#1abc9c', shape: 'ellipse' }
+            ]);
+
+            const edges = new vis.DataSet([
+                { from: 1, to: 2, label: 'HTTP/HTTPS', color: { color: '#3498db' } },
+                { from: 2, to: 3, label: 'HTTP/HTTPS', color: { color: '#2ecc71' } },
+                { from: 3, to: 4, label: 'SQL', color: { color: '#f39c12' } },
+                { from: 2, to: 5, label: 'HTTP/HTTPS', color: { color: '#9b59b6' } },
+                { from: 2, to: 6, label: 'SSH/RDP', color: { color: '#1abc9c' } }
+            ]);
+
+            const data = {
+                nodes: nodes,
+                edges: edges
+            };
+
+            const options = {
+                layout: {
+                    hierarchical: {
+                        direction: 'LR',
+                        sortMethod: 'directed'
+                    }
+                },
+                edges: {
+                    arrows: {
+                        to: { enabled: true, scaleFactor: 0.5 }
+                    },
+                    smooth: {
+                        enabled: true,
+                        type: 'continuous'
+                    }
+                },
+                physics: {
+                    enabled: true,
+                    hierarchicalRepulsion: {
+                        nodeDistance: 120
+                    }
+                }
+            };
+
+            new vis.Network(container, data, options);
+        }
+
+        // Simulate traffic capture
+        function simulateTrafficCapture() {
+            if (!trafficCaptureActive) return;
+
+            // Update traffic protocol chart with random data
+            const protocols = ['HTTP', 'HTTPS', 'DNS', 'SSH', 'FTP', 'SMTP'];
+            const newData = trafficProtocolChart.data.datasets[0].data.map((value, index) => {
+                return value + Math.floor(Math.random() * 10);
+            });
+
+            trafficProtocolChart.data.datasets[0].data = newData;
+            trafficProtocolChart.update();
+
+            // Update traffic pairs list
+            updateTrafficPairs();
+
+            // Schedule next update
+            setTimeout(simulateTrafficCapture, 2000);
+        }
+
+        // Update traffic pairs list
+        function updateTrafficPairs() {
+            const pairsList = document.getElementById('traffic-pairs-list');
+
+            // Clear existing pairs (keep first 5)
+            while (pairsList.children.length > 5) {
+                pairsList.removeChild(pairsList.lastChild);
+            }
+
+            // Add new pair
+            const sourceIP = `192.168.1.${Math.floor(Math.random() * 254) + 1}`;
+            const destIP = `10.0.0.${Math.floor(Math.random() * 254) + 1}`;
+            const protocol = ['HTTP', 'HTTPS', 'SSH', 'DNS'][Math.floor(Math.random() * 4)];
+            const bytes = Math.floor(Math.random() * 10000) + 1000;
+
+            const pairElement = document.createElement('div');
+            pairElement.className = 'list-group-item d-flex justify-content-between align-items-center';
+            pairElement.innerHTML = `
+                <div>
+                    <div class="fw-bold">${sourceIP} → ${destIP}</div>
+                    <small class="text-muted">${protocol} • ${bytes} bytes</small>
+                </div>
+                <span class="badge bg-primary rounded-pill">${Math.floor(Math.random() * 100) + 1} packets</span>
+            `;
+
+            pairsList.insertBefore(pairElement, pairsList.firstChild);
+        }
+
+        // Load network traffic data
+        function loadNetworkTrafficData() {
+            // Initialize traffic protocol chart with some data
+            trafficProtocolChart.data.datasets[0].data = [120, 450, 80, 25, 15, 30];
+            trafficProtocolChart.update();
+
+            // Initialize traffic pairs with some data
+            const initialPairs = [
+                { source: '192.168.1.100', dest: '10.0.0.10', protocol: 'HTTPS', bytes: 15420, packets: 45 },
+                { source: '192.168.1.150', dest: '10.0.0.20', protocol: 'HTTP', bytes: 8320, packets: 32 },
+                { source: '10.0.0.10', dest: '192.168.1.100', protocol: 'HTTPS', bytes: 23450, packets: 67 },
+                { source: '192.168.1.200', dest: '10.0.0.30', protocol: 'SSH', bytes: 5200, packets: 28 },
+                { source: '10.0.0.20', dest: '192.168.1.150', protocol: 'HTTP', bytes: 12500, packets: 41 }
+            ];
+
+            const pairsList = document.getElementById('traffic-pairs-list');
+            initialPairs.forEach(pair => {
+                const pairElement = document.createElement('div');
+                pairElement.className = 'list-group-item d-flex justify-content-between align-items-center';
+                pairElement.innerHTML = `
+                    <div>
+                        <div class="fw-bold">${pair.source} → ${pair.dest}</div>
+                        <small class="text-muted">${pair.protocol} • ${pair.bytes} bytes</small>
+                    </div>
+                    <span class="badge bg-primary rounded-pill">${pair.packets} packets</span>
+                `;
+                pairsList.appendChild(pairElement);
+            });
+        }
+
+        // Load MITRE ATT&CK data
+        function loadMitreAttackData() {
+            // Create MITRE ATT&CK matrix
+            createMitreMatrix();
+
+            // Create advanced attack graph
+            createAdvancedAttackGraph();
+
+            // Load detected techniques
+            loadDetectedTechniques();
+        }
+
+        // Create MITRE ATT&CK matrix
+        function createMitreMatrix() {
+            const matrixContainer = document.getElementById('mitre-matrix');
+
+            // MITRE ATT&CK tactics
+            const tactics = [
+                'Reconnaissance', 'Resource Development', 'Initial Access', 'Execution',
+                'Persistence', 'Privilege Escalation', 'Defense Evasion', 'Credential Access',
+                'Discovery', 'Lateral Movement', 'Collection', 'Command and Control',
+                'Exfiltration', 'Impact'
+            ];
+
+            // Sample techniques for each tactic
+            const techniques = {
+                'Reconnaissance': ['T1595.001', 'T1592.002', 'T1589.001'],
+                'Resource Development': ['T1583.001', 'T1584.001', 'T1587.001'],
+                'Initial Access': ['T1566.001', 'T1195.001', 'T1078.003'],
+                'Execution': ['T1059.003', 'T1053.005', 'T1047'],
+                'Persistence': ['T1547.001', 'T1136.001', 'T1505.003'],
+                'Privilege Escalation': ['T1548.002', 'T1068', 'T1055.001'],
+                'Defense Evasion': ['T1562.001', 'T1027', 'T1553.002'],
+                'Credential Access': ['T1110.001', 'T1555.003', 'T1552.001'],
+                'Discovery': ['T1087.001', 'T1018', 'T1033'],
+                'Lateral Movement': ['T1021.001', 'T1021.002', 'T1570'],
+                'Collection': ['T1560.001', 'T1115', 'T1123'],
+                'Command and Control': ['T1071.001', 'T1090', 'T1573.001'],
+                'Exfiltration': ['T1041', 'T1020', 'T1567.002'],
+                'Impact': ['T1485', 'T1486', 'T1490']
+            };
+
+            let matrixHTML = '<div class="table-responsive"><table class="table table-bordered table-sm">';
+            matrixHTML += '<thead><tr><th>Tactic</th><th>Techniques</th><th>Detected</th><th>Prevented</th></tr></thead><tbody>';
+
+            tactics.forEach(tactic => {
+                const tacticTechniques = techniques[tactic] || [];
+                const detectedCount = Math.floor(Math.random() * 3);
+                const preventedCount = Math.floor(Math.random() * 3);
+
+                matrixHTML += `
+                    <tr>
+                        <td>${tactic}</td>
+                        <td>${tacticTechniques.join(', ')}</td>
+                        <td><span class="badge bg-${detectedCount > 0 ? 'warning' : 'secondary'}">${detectedCount}</span></td>
+                        <td><span class="badge bg-${preventedCount > 0 ? 'success' : 'secondary'}">${preventedCount}</span></td>
+                    </tr>
+                `;
+            });
+
+            matrixHTML += '</tbody></table></div>';
+            matrixContainer.innerHTML = matrixHTML;
+        }
+
+        // Create advanced attack graph
+        function createAdvancedAttackGraph() {
+            const container = document.getElementById('advanced-attack-graph');
+
+            // Create nodes with different groups and properties
+            const nodes = new vis.DataSet([
+                { id: 1, label: 'External Attacker', group: 'threat', color: { background: '#e74c3c', border: '#c0392b' }, font: { color: 'white' } },
+                { id: 2, label: 'Compromised User', group: 'user', color: { background: '#f39c12', border: '#d35400' }, font: { color: 'white' } },
+                { id: 3, label: 'Web Server', group: 'endpoint', color: { background: '#2ecc71', border: '#27ae60' }, font: { color: 'white' } },
+                { id: 4, label: 'Database Server', group: 'endpoint', color: { background: '#2ecc71', border: '#27ae60' }, font: { color: 'white' } },
+                { id: 5, label: 'Domain Controller', group: 'endpoint', color: { background: '#2ecc71', border: '#27ae60' }, font: { color: 'white' } },
+                { id: 6, label: 'File Server', group: 'endpoint', color: { background: '#2ecc71', border: '#27ae60' }, font: { color: 'white' } },
+                { id: 7, label: 'Sensitive Data', group: 'data', color: { background: '#9b59b6', border: '#8e44ad' }, font: { color: 'white' }, shape: 'database' },
+                { id: 8, label: 'Email Server', group: 'service', color: { background: '#1abc9c', border: '#16a085' }, font: { color: 'white' } },
+                { id: 9, label: 'Firewall', group: 'network', color: { background: '#3498db', border: '#2980b9' }, font: { color: 'white' }, shape: 'diamond' }
+            ]);
+
+            // Create edges with different styles
+            const edges = new vis.DataSet([
+                { from: 1, to: 2, label: 'Phishing Email\nT1566.001', color: { color: '#e74c3c', hover: '#c0392b' }, arrows: 'to', dashes: false, width: 2 },
+                { from: 2, to: 3, label: 'Exploit Vulnerability\nT1190', color: { color: '#e74c3c', hover: '#c0392b' }, arrows: 'to', dashes: false, width: 2 },
+                { from: 3, to: 4, label: 'SQL Injection\nT1190', color: { color: '#e74c3c', hover: '#c0392b' }, arrows: 'to', dashes: false, width: 2 },
+                { from: 4, to: 5, label: 'Pass the Hash\nT1550.002', color: { color: '#e74c3c', hover: '#c0392b' }, arrows: 'to', dashes: false, width: 2 },
+                { from: 5, to: 6, label: 'SMB Share Access\nT1021.002', color: { color: '#e74c3c', hover: '#c0392b' }, arrows: 'to', dashes: false, width: 2 },
+                { from: 6, to: 7, label: 'Data Collection\nT1119', color: { color: '#e74c3c', hover: '#c0392b' }, arrows: 'to', dashes: false, width: 2 },
+                { from: 7, to: 8, label: 'Data Exfiltration\nT1048', color: { color: '#e74c3c', hover: '#c0392b' }, arrows: 'to', dashes: [5, 5], width: 2 },
+                { from: 8, to: 1, label: 'C2 Communication\nT1071.001', color: { color: '#e74c3c', hover: '#c0392b' }, arrows: 'to', dashes: false, width: 2 },
+                { from: 9, to: 3, label: 'Blocked Attempt', color: { color: '#27ae60', hover: '#219955' }, arrows: 'to', dashes: false, width: 2 }
+            ]);
+
+            const data = {
+                nodes: nodes,
+                edges: edges
+            };
+
+            const options = {
+                layout: {
+                    improvedLayout: true,
+                    hierarchical: {
+                        enabled: false
+                    }
+                },
+                groups: {
+                    threat: {
+                        color: { background: '#e74c3c', border: '#c0392b' },
+                        font: { color: 'white' },
+                        shape: 'icon',
+                        icon: {
+                            face: 'FontAwesome',
+                            code: '\uf21d',
+                            size: 30,
+                            color: 'white'
+                        }
+                    },
+                    user: {
+                        color: { background: '#f39c12', border: '#d35400' },
+                        font: { color: 'white' }
+                    },
+                    endpoint: {
+                        color: { background: '#2ecc71', border: '#27ae60' },
+                        font: { color: 'white' }
+                    },
+                    data: {
+                        color: { background: '#9b59b6', border: '#8e44ad' },
+                        font: { color: 'white' },
+                        shape: 'database'
+                    },
+                    service: {
+                        color: { background: '#1abc9c', border: '#16a085' },
+                        font: { color: 'white' }
+                    },
+                    network: {
+                        color: { background: '#3498db', border: '#2980b9' },
+                        font: { color: 'white' },
+                        shape: 'diamond'
+                    }
+                },
+                edges: {
+                    arrows: {
+                        to: {
+                            enabled: true,
+                            scaleFactor: 0.8,
+                            type: 'arrow'
+                        }
+                    },
+                    font: {
+                        align: 'horizontal',
+                        size: 10,
+                        strokeWidth: 5,
+                        strokeColor: 'rgba(255,255,255,0.7)'
+                    },
+                    smooth: {
+                        enabled: true,
+                        type: 'cubicBezier',
+                        forceDirection: 'horizontal',
+                        roundness: 0.5
+                    },
+                    width: 2
+                },
+                physics: {
+                    enabled: true,
+                    stabilization: { iterations: 100 },
+                    barnesHut: {
+                        gravitationalConstant: -8000,
+                        springConstant: 0.04,
+                        springLength: 95
+                    }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 200,
+                    hideEdgesOnDrag: true
+                }
+            };
+
+            advancedAttackGraph = new vis.Network(container, data, options);
+
+            // Add click event listener for nodes
+            advancedAttackGraph.on("click", function(params) {
+                if (params.nodes.length > 0) {
+                    const nodeId = params.nodes[0];
+                    const node = nodes.get(nodeId);
+                    showAttackNodeDetails(node);
+                } else if (params.edges.length > 0) {
+                    const edgeId = params.edges[0];
+                    const edge = edges.get(edgeId);
+                    showAttackEdgeDetails(edge);
+                }
+            });
+        }
+
+        // Show attack node details
+        function showAttackNodeDetails(node) {
+            const detailsContainer = document.getElementById('attack-details');
+
+            let detailsHTML = `
+                <h6>${node.label}</h6>
+                <p><strong>Type:</strong> ${node.group.charAt(0).toUpperCase() + node.group.slice(1)}</p>
+            `;
+
+            // Add specific details based on node type
+            if (node.group === 'threat') {
+                detailsHTML += `
+                    <p><strong>Threat Level:</strong> <span class="badge bg-danger">High</span></p>
+                    <p><strong>Description:</strong> External threat actor attempting to infiltrate the network.</p>
+                    <p><strong>Recommended Action:</strong> Monitor and block malicious IPs.</p>
+                `;
+            } else if (node.group === 'endpoint') {
+                detailsHTML += `
+                    <p><strong>Status:</strong> <span class="badge bg-warning">Compromised</span></p>
+                    <p><strong>Last Seen:</strong> ${new Date().toLocaleString()}</p>
+                    <p><strong>Recommended Action:</strong> Isolate and investigate.</p>
+                `;
+            } else if (node.group === 'data') {
+                detailsHTML += `
+                    <p><strong>Sensitivity:</strong> <span class="badge bg-dark">Critical</span></p>
+                    <p><strong>Access Pattern:</strong> Unusual access detected</p>
+                    <p><strong>Recommended Action:</strong> Enable additional monitoring.</p>
+                `;
+            }
+
+            detailsContainer.innerHTML = detailsHTML;
+        }
+
+        // Show attack edge details
+        function showAttackEdgeDetails(edge) {
+            const detailsContainer = document.getElementById('attack-details');
+
+            const detailsHTML = `
+                <h6>Attack Technique</h6>
+                <p><strong>Technique ID:</strong> ${edge.label.split('\n')[1] || 'N/A'}</p>
+                <p><strong>Description:</strong> ${edge.label.split('\n')[0]}</p>
+                <p><strong>Status:</strong> <span class="badge bg-${edge.color.color === '#27ae60' ? 'success' : 'warning'}">${edge.color.color === '#27ae60' ? 'Blocked' : 'Detected'}</span></p>
+                <p><strong>MITRE ATT&CK:</strong> <a href="#" class="text-decoration-none">View Details</a></p>
+            `;
+
+            detailsContainer.innerHTML = detailsHTML;
+        }
+
+        // Load detected techniques
+        function loadDetectedTechniques() {
+            const techniquesList = document.getElementById('mitre-techniques-list');
+
+            const techniques = [
+                { id: 'T1566.001', name: 'Phishing: Spearphishing Attachment', severity: 'high', detected: '2 hours ago', count: 5 },
+                { id: 'T1059.003', name: 'Command and Scripting Interpreter: Windows Command Shell', severity: 'medium', detected: '5 hours ago', count: 12 },
+                { id: 'T1027', name: 'Obfuscated Files or Information', severity: 'medium', detected: '1 day ago', count: 3 },
+                { id: 'T1110.001', name: 'Brute Force: Password Guessing', severity: 'high', detected: '2 days ago', count: 8 },
+                { id: 'T1547.001', name: 'Boot or Logon Autostart Execution: Registry Run Keys', severity: 'low', detected: '3 days ago', count: 2 }
+            ];
+
+            techniques.forEach(tech => {
+                const techElement = document.createElement('div');
+                techElement.className = 'list-group-item mitre-technique';
+                techElement.innerHTML = `
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${tech.id}</h6>
+                        <span class="badge bg-${getSeverityBadgeColor(tech.severity)}">${tech.count}</span>
+                    </div>
+                    <p class="mb-1">${tech.name}</p>
+                    <small class="text-muted">Detected: ${tech.detected}</small>
+                `;
+
+                techElement.addEventListener('click', function() {
+                    showTechniqueDetails(tech);
+                });
+
+                techniquesList.appendChild(techElement);
+            });
+        }
+
+        // Show technique details
+        function showTechniqueDetails(tech) {
+            const detailsContainer = document.getElementById('attack-details');
+
+            const detailsHTML = `
+                <h6>${tech.id}: ${tech.name}</h6>
+                <p><strong>Severity:</strong> <span class="badge bg-${getSeverityBadgeColor(tech.severity)}">${tech.severity.toUpperCase()}</span></p>
+                <p><strong>Detection Count:</strong> ${tech.count}</p>
+                <p><strong>First Detected:</strong> ${tech.detected}</p>
+                <p><strong>Description:</strong> This technique involves ${tech.name.toLowerCase()} as part of the attack chain.</p>
+                <p><strong>Mitigation:</strong> Implement proper security controls and monitoring.</p>
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-outline-primary me-2">View in Matrix</button>
+                    <button class="btn btn-sm btn-outline-secondary">Create Detection Rule</button>
+                </div>
+            `;
+
+            detailsContainer.innerHTML = detailsHTML;
+        }
+
+        // Load AI analytics data
+        function loadAiAnalyticsData() {
+            // Update model performance
+            document.getElementById('cnn-accuracy').textContent = `${(Math.random() * 5 + 95).toFixed(1)}%`;
+            document.getElementById('cnn-bar').style.width = `${Math.random() * 5 + 95}%`;
+
+            document.getElementById('anomaly-accuracy').textContent = `${(Math.random() * 8 + 90).toFixed(1)}%`;
+            document.getElementById('anomaly-bar').style.width = `${Math.random() * 8 + 90}%`;
+
+            document.getElementById('ensemble-accuracy').textContent = `${(Math.random() * 3 + 97).toFixed(1)}%`;
+            document.getElementById('ensemble-bar').style.width = `${Math.random() * 3 + 97}%`;
+
+            // Update inference performance
+            document.getElementById('cnn-latency').textContent = `${Math.floor(Math.random() * 10 + 5)}ms`;
+            document.getElementById('anomaly-latency').textContent = `${Math.floor(Math.random() * 20 + 10)}ms`;
+            document.getElementById('ensemble-latency').textContent = `${Math.floor(Math.random() * 15 + 8)}ms`;
+
+            // Update training data
+            document.getElementById('training-samples').textContent = (Math.floor(Math.random() * 50000) + 50000).toLocaleString();
+            document.getElementById('validation-samples').textContent = (Math.floor(Math.random() * 10000) + 10000).toLocaleString();
+            document.getElementById('test-samples').textContent = (Math.floor(Math.random() * 15000) + 15000).toLocaleString();
+
+            // Update model accuracy chart
+            updateModelAccuracyChart();
+        }
+
+        // Update model accuracy chart
+        function updateModelAccuracyChart() {
+            const now = new Date();
+            const labels = [];
+            const cnnData = [];
+            const anomalyData = [];
+            const ensembleData = [];
+
+            // Generate data for last 7 days
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(now.getDate() - i);
+                labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+                cnnData.push(Math.random() * 3 + 95);
+                anomalyData.push(Math.random() * 5 + 90);
+                ensembleData.push(Math.random() * 2 + 97);
+            }
+
+            modelAccuracyChart.data.labels = labels;
+            modelAccuracyChart.data.datasets[0].data = cnnData;
+            modelAccuracyChart.data.datasets[1].data = anomalyData;
+            modelAccuracyChart.data.datasets[2].data = ensembleData;
+            modelAccuracyChart.update();
+        }
+
+        // Retrain models
+        function retrainModels() {
+            // Show loading state
+            const button = document.getElementById('retrain-models');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Retraining...';
+            button.disabled = true;
+
+            // Simulate retraining process
+            setTimeout(() => {
+                // Update model accuracies
+                document.getElementById('cnn-accuracy').textContent = `${(Math.random() * 2 + 96).toFixed(1)}%`;
+                document.getElementById('anomaly-accuracy').textContent = `${(Math.random() * 3 + 92).toFixed(1)}%`;
+                document.getElementById('ensemble-accuracy').textContent = `${(Math.random() * 1 + 98).toFixed(1)}%`;
+
+                // Update model accuracy chart
+                updateModelAccuracyChart();
+
+                // Restore button
+                button.innerHTML = originalText;
+                button.disabled = false;
+
+                // Show success message
+                alert('Models retrained successfully!');
+            }, 3000);
+        }
+
+        // Load incident response data
+        function loadIncidentResponseData() {
+            // Load active incidents
+            loadActiveIncidents();
+
+            // Update incident statistics chart
+            updateIncidentStatsChart();
+
+            // Load incident timeline
+            loadIncidentTimeline();
+        }
+
+        // Load active incidents
+        function loadActiveIncidents() {
+            const incidentsList = document.getElementById('active-incidents-list');
+
+            const incidents = [
+                {
+                    id: 1,
+                    title: 'Suspicious SSH Login Attempts',
+                    severity: 'high',
+                    timestamp: new Date(Date.now() - 300000).toLocaleString(),
+                    source: '192.168.1.100',
+                    status: 'Investigating',
+                    assignedTo: 'Security Team A'
+                },
+                {
+                    id: 2,
+                    title: 'Potential Data Exfiltration',
+                    severity: 'critical',
+                    timestamp: new Date(Date.now() - 900000).toLocaleString(),
+                    source: '10.0.0.45',
+                    status: 'Contained',
+                    assignedTo: 'Incident Response Team'
+                },
+                {
+                    id: 3,
+                    title: 'Malware Detected on Endpoint',
+                    severity: 'medium',
+                    timestamp: new Date(Date.now() - 1800000).toLocaleString(),
+                    source: '192.168.1.203',
+                    status: 'Remediating',
+                    assignedTo: 'Endpoint Security'
+                }
+            ];
+
+            incidents.forEach(incident => {
+                const severityClass = `incident-${incident.severity}`;
+
+                const incidentElement = document.createElement('div');
+                incidentElement.className = `list-group-item list-group-item-action incident-card ${severityClass}`;
+                incidentElement.innerHTML = `
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${incident.title}</h6>
+                        <small class="text-muted">${incident.timestamp}</small>
+                    </div>
+                    <p class="mb-1">Source: ${incident.source} | Assigned to: ${incident.assignedTo}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Status: ${incident.status}</small>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary me-1">Details</button>
+                            <button class="btn btn-sm btn-outline-success">Resolve</button>
+                        </div>
+                    </div>
+                `;
+
+                incidentsList.appendChild(incidentElement);
+            });
+        }
+
+        // Update incident statistics chart
+        function updateIncidentStatsChart() {
+            incidentStatsChart.data.datasets[0].data = [
+                Math.floor(Math.random() * 10) + 5,
+                Math.floor(Math.random() * 8) + 3,
+                Math.floor(Math.random() * 5) + 1,
+                Math.floor(Math.random() * 3)
+            ];
+            incidentStatsChart.update();
+        }
+
+        // Load incident timeline
+        function loadIncidentTimeline() {
+            const timelineContainer = document.getElementById('incident-timeline');
+
+            const timelineEvents = [
+                { time: '10:30 AM', event: 'Malware detection alert triggered', type: 'alert' },
+                { time: '10:32 AM', event: 'Automated containment initiated', type: 'action' },
+                { time: '10:35 AM', event: 'Security team notified', type: 'notification' },
+                { time: '10:40 AM', event: 'Incident investigation started', type: 'investigation' },
+                { time: '11:15 AM', event: 'Threat identified as ransomware variant', type: 'finding' },
+                { time: '11:30 AM', event: 'Infected system isolated', type: 'containment' },
+                { time: '12:00 PM', event: 'Remediation process initiated', type: 'remediation' }
+            ];
+
+            let timelineHTML = '<div class="position-relative">';
+
+            timelineEvents.forEach((event, index) => {
+                const isEven = index % 2 === 0;
+
+                timelineHTML += `
+                    <div class="d-flex ${isEven ? '' : 'flex-row-reverse'} mb-4">
+                        <div class="flex-shrink-0 rounded-circle bg-primary d-flex align-items-center justify-content-center"
+                             style="width: 40px; height: 40px; z-index: 1;">
+                            <i class="fas fa-${getTimelineIcon(event.type)} text-white"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3 me-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">${event.time}</h6>
+                                    <p class="card-text">${event.event}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            timelineHTML += '</div>';
+            timelineContainer.innerHTML = timelineHTML;
+        }
+
+        // Get icon for timeline event type
+        function getTimelineIcon(type) {
+            switch(type) {
+                case 'alert': return 'exclamation-triangle';
+                case 'action': return 'bolt';
+                case 'notification': return 'bell';
+                case 'investigation': return 'search';
+                case 'finding': return 'binoculars';
+                case 'containment': return 'shield-alt';
+                case 'remediation': return 'tools';
+                default: return 'circle';
+            }
+        }
+
+        // Show new incident modal
+        function showNewIncidentModal() {
+            const modal = new bootstrap.Modal(document.getElementById('newIncidentModal'));
+            modal.show();
+        }
+
+        // Create new incident
+        function createNewIncident() {
+            const form = document.getElementById('new-incident-form');
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Get form values
+            const title = document.getElementById('incident-title').value;
+            const priority = document.getElementById('incident-priority').value;
+            const description = document.getElementById('incident-description').value;
+            const sourceIP = document.getElementById('source-ip').value;
+            const destinationIP = document.getElementById('destination-ip').value;
+            const incidentType = document.getElementById('incident-type').value;
+            const mitreTechnique = document.getElementById('mitre-technique').value;
+            const assignedTeam = document.getElementById('assigned-team').value;
+            const responseAction = document.getElementById('response-action').value;
+            const notes = document.getElementById('incident-notes').value;
+
+            // Create new incident object
+            const newIncident = {
+                id: Date.now(),
+                title: title,
+                severity: priority,
+                timestamp: new Date().toLocaleString(),
+                source: sourceIP || 'Unknown',
+                status: 'New',
+                assignedTo: assignedTeam,
+                description: description,
+                type: incidentType,
+                mitreTechnique: mitreTechnique,
+                responseAction: responseAction,
+                notes: notes
+            };
+
+            // Add to active incidents list
+            addIncidentToActiveList(newIncident);
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('newIncidentModal'));
+            modal.hide();
+
+            // Reset form
+            form.reset();
+
+            // Show success message
+            alert('Incident created successfully!');
+        }
+
+        // Add incident to active incidents list
+        function addIncidentToActiveList(incident) {
+            const incidentsList = document.getElementById('active-incidents-list');
+            const severityClass = `incident-${incident.severity}`;
+
+            const incidentElement = document.createElement('div');
+            incidentElement.className = `list-group-item list-group-item-action incident-card ${severityClass}`;
+            incidentElement.innerHTML = `
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">${incident.title}</h6>
+                    <small class="text-muted">${incident.timestamp}</small>
+                </div>
+                <p class="mb-1">Source: ${incident.source} | Assigned to: ${incident.assignedTo}</p>
+                <p class="mb-1">Type: ${incident.type} | MITRE: ${incident.mitreTechnique || 'N/A'}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">Status: ${incident.status}</small>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-1">Details</button>
+                        <button class="btn btn-sm btn-outline-success">Resolve</button>
+                    </div>
+                </div>
+            `;
+
+            incidentsList.appendChild(incidentElement);
+
+            // Update active incidents count
+            const activeIncidentsCount = parseInt(document.getElementById('active-incidents').textContent);
+            document.getElementById('active-incidents').textContent = activeIncidentsCount + 1;
+        }
+
+        // Load settings
+        function loadSettings() {
+            // Settings are already set with default values in the HTML
+            console.log('Settings loaded');
+        }
+
+        // Save settings
+        function saveSettings() {
+            // In a real implementation, this would send settings to the backend
+            const settings = {
+                detectionSensitivity: document.getElementById('detection-sensitivity').value,
+                autoBlock: document.getElementById('auto-block').checked,
+                autoQuarantine: document.getElementById('auto-quarantine').checked,
+                emailNotifications: document.getElementById('email-notifications').checked,
+                alertThreshold: document.getElementById('alert-threshold').value,
+                notificationEmail: document.getElementById('notification-email').value,
+                monitoringInterface: document.getElementById('monitoring-interface').value,
+                packetCaptureSize: document.getElementById('packet-capture-size').value,
+                maxThroughput: document.getElementById('max-throughput').value,
+                logRetention: document.getElementById('log-retention').value,
+                threatRetention: document.getElementById('threat-retention').value,
+                maxDbSize: document.getElementById('max-db-size').value,
+                performanceMode: document.getElementById('performance-mode').value,
+                autoUpdate: document.getElementById('auto-update').checked,
+                autoBackup: document.getElementById('auto-backup').checked
+            };
+
+            console.log('Saving settings:', settings);
+            alert('Settings saved successfully!');
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('system-status');
+            const indicatorElement = statusElement.previousElementSibling;
+
+            if (connected) {
+                statusElement.textContent = 'Operational';
+                indicatorElement.className = 'status-indicator status-online';
+            } else {
+                statusElement.textContent = 'Disconnected';
+                indicatorElement.className = 'status-indicator status-critical';
+            }
+        }
+
+        // Simulate real-time data updates
+        function simulateRealTimeData() {
+            if (Math.random() > 0.7) {
+                // Randomly update some metrics
+                const threatsBlocked = parseInt(document.getElementById('threats-blocked').textContent);
+                document.getElementById('threats-blocked').textContent = threatsBlocked + 1;
+
+                const activeIncidents = parseInt(document.getElementById('active-incidents').textContent);
+                if (Math.random() > 0.8 && activeIncidents < 10) {
+                    document.getElementById('active-incidents').textContent = activeIncidents + 1;
+                }
+            }
+        }
+
+
+                function initializeUserProfile() {
+            const session = localStorage.getItem('sentinelai_session');
+
+            if (!session) {
+                console.warn('No user session found');
+                return;
+            }
+
+            try {
+                const userData = JSON.parse(session).user;
+
+                // Update user information in navbar
+                const userNameElement = document.getElementById('user-name');
+                const userAvatarElement = document.getElementById('user-avatar');
+
+                if (userNameElement) {
+                    userNameElement.textContent = userData.name;
+                }
+                if (userAvatarElement) {
+                    userAvatarElement.src = getAvatarUrl(userData.avatar);
+                }
+
+                // Update user role in dashboard if needed
+                updateUserRoleDisplay(userData.role);
+            } catch (error) {
+                console.error('Error initializing user profile:', error);
+            }
+        }
+
+                // Mobile sidebar functionality
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const button = document.getElementById('mobileMenuBtn');
+
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+
+            // Change icon
+            if (sidebar.classList.contains('active')) {
+                button.innerHTML = '<i class="fas fa-times"></i>';
+            } else {
+                button.innerHTML = '<i class="fas fa-bars"></i>';
+            }
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const button = document.getElementById('mobileMenuBtn');
+
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            button.innerHTML = '<i class="fas fa-bars"></i>';
+        }
+
+        // Close sidebar when clicking outside or pressing ESC
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('mobileSidebar');
+            const button = document.getElementById('mobileMenuBtn');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            if (sidebar.classList.contains('active') &&
+                !sidebar.contains(event.target) &&
+                !button.contains(event.target)) {
+                closeMobileSidebar();
+            }
+        });
+
+        // Close sidebar with ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeMobileSidebar();
+            }
+        });
+
+        // Update active tab in mobile sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update mobile sidebar active state when tabs change
+            const tabLinks = document.querySelectorAll('.nav-link[data-bs-toggle="tab"]');
+            tabLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    // Update active state in mobile sidebar
+                    const mobileLinks = document.querySelectorAll('.sidebar-mobile .nav-link');
+                    mobileLinks.forEach(mobileLink => {
+                        mobileLink.classList.remove('active');
+                        if (mobileLink.getAttribute('href') === this.getAttribute('href')) {
+                            mobileLink.classList.add('active');
+                        }
+                    });
+                });
+            });
+        });
+
+        // Handle page visibility change
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                // Page is visible, refresh data
+                updateDashboardMetrics();
+            }
+        });
+    </script>
+</body>
+</html>

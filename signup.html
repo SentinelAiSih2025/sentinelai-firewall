@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentinelAI - Sign Up</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .signup-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .signup-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .signup-header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .signup-header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .signup-body {
+            padding: 30px;
+        }
+
+        .form-control {
+            border: 2px solid #e3e6f0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .btn-signup {
+            background: var(--success-color);
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .btn-signup:hover {
+            background: #219955;
+            transform: translateY(-2px);
+        }
+
+        .signup-footer {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid #e3e6f0;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+            padding: 12px 15px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .password-strength {
+            height: 5px;
+            border-radius: 5px;
+            margin-top: 5px;
+            background: #e3e6f0;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s;
+            border-radius: 5px;
+        }
+
+        .strength-weak { background: var(--danger-color); width: 25%; }
+        .strength-fair { background: var(--warning-color); width: 50%; }
+        .strength-good { background: #f1c40f; width: 75%; }
+        .strength-strong { background: var(--success-color); width: 100%; }
+
+        .password-feedback {
+            font-size: 0.875rem;
+            margin-top: 5px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #666;
+        }
+
+        .feature-list li i {
+            color: var(--success-color);
+            margin-right: 10px;
+        }
+
+        .avatar-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .avatar-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid #e3e6f0;
+            cursor: pointer;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .avatar-option:hover {
+            border-color: var(--secondary-color);
+        }
+
+        .avatar-option.selected {
+            border-color: var(--success-color);
+        }
+
+        .avatar-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="signup-header">
+            <h1><i class="fas fa-shield-alt"></i> SentinelAI</h1>
+            <p>Create Your Account</p>
+        </div>
+
+        <div class="signup-body">
+            <div id="signup-alert" class="alert alert-danger d-none" role="alert">
+                <!-- Error messages will appear here -->
+            </div>
+
+            <form id="signup-form">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="first-name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first-name" placeholder="First name" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="last-name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last-name" placeholder="Last name" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Profile Avatar</label>
+                    <div class="avatar-options">
+                        <div class="avatar-option selected" data-avatar="avatar1.png">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMzNDk4REIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 1">
+                        </div>
+                        <div class="avatar-option" data-avatar="avatar2.png">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMyZWNjNzEiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 2">
+                        </div>
+                        <div class="avatar-option" data-avatar="avatar3.png">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiNmMzljMTIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 3">
+                        </div>
+                        <div class="avatar-option" data-avatar="avatar4.png">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiM5YjU5YjYiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 4">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" placeholder="Enter your email" required>
+                </div>
+
+                <div class="mb-3 password-container">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" placeholder="Create a password" required>
+                    <button type="button" class="password-toggle" id="toggle-password">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <div class="password-strength">
+                        <div class="password-strength-bar" id="password-strength-bar"></div>
+                    </div>
+                    <div class="password-feedback" id="password-feedback"></div>
+                </div>
+
+                <div class="mb-3 password-container">
+                    <label for="confirm-password" class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control" id="confirm-password" placeholder="Confirm your password" required>
+                    <button type="button" class="password-toggle" id="toggle-confirm-password">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+
+                <div class="mb-3">
+                    <label for="role" class="form-label">Role</label>
+                    <select class="form-control" id="role" required>
+                        <option value="">Select your role</option>
+                        <option value="security_analyst">Security Analyst</option>
+                        <option value="network_admin">Network Administrator</option>
+                        <option value="security_manager">Security Manager</option>
+                        <option value="system_admin">System Administrator</option>
+                    </select>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="terms" required>
+                    <label class="form-check-label" for="terms">
+                        I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-signup" id="signup-btn">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </form>
+
+            <hr>
+
+            <div class="text-center">
+                <p>Already have an account? <a href="login.html">Sign in here</a></p>
+            </div>
+        </div>
+
+        <div class="signup-footer">
+            <small class="text-muted">By creating an account, you agree to our terms and conditions</small>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let selectedAvatar = 'avatar1.png';
+
+        // Avatar selection
+        document.querySelectorAll('.avatar-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.avatar-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                this.classList.add('selected');
+                selectedAvatar = this.getAttribute('data-avatar');
+            });
+        });
+
+        // Password toggle functionality
+        document.getElementById('toggle-password').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        document.getElementById('toggle-confirm-password').addEventListener('click', function() {
+            const passwordInput = document.getElementById('confirm-password');
+            const icon = this.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        // Password strength checker
+        document.getElementById('password').addEventListener('input', function() {
+            checkPasswordStrength(this.value);
+        });
+
+        function checkPasswordStrength(password) {
+            const strengthBar = document.getElementById('password-strength-bar');
+            const feedback = document.getElementById('password-feedback');
+
+            let strength = 0;
+            let feedbackText = '';
+
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+            if (password.match(/\d/)) strength++;
+            if (password.match(/[^a-zA-Z\d]/)) strength++;
+
+            switch(strength) {
+                case 0:
+                case 1:
+                    strengthBar.className = 'password-strength-bar strength-weak';
+                    feedbackText = 'Weak password';
+                    feedback.style.color = '#e74c3c';
+                    break;
+                case 2:
+                    strengthBar.className = 'password-strength-bar strength-fair';
+                    feedbackText = 'Fair password';
+                    feedback.style.color = '#f39c12';
+                    break;
+                case 3:
+                    strengthBar.className = 'password-strength-bar strength-good';
+                    feedbackText = 'Good password';
+                    feedback.style.color = '#f1c40f';
+                    break;
+                case 4:
+                    strengthBar.className = 'password-strength-bar strength-strong';
+                    feedbackText = 'Strong password';
+                    feedback.style.color = '#27ae60';
+                    break;
+            }
+
+            feedback.textContent = feedbackText;
+        }
+
+        // Form submission
+        document.getElementById('signup-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const firstName = document.getElementById('first-name').value;
+            const lastName = document.getElementById('last-name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const role = document.getElementById('role').value;
+            const terms = document.getElementById('terms').checked;
+
+            // Validation
+            if (!firstName || !lastName || !email || !password || !confirmPassword || !role) {
+                showAlert('Please fill in all fields', 'danger');
+                return;
+            }
+
+            if (!terms) {
+                showAlert('Please agree to the terms and conditions', 'danger');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match', 'danger');
+                return;
+            }
+
+            if (password.length < 8) {
+                showAlert('Password must be at least 8 characters long', 'danger');
+                return;
+            }
+
+            // Check if email already exists
+            const users = JSON.parse(localStorage.getItem('sentinelai_users') || '[]');
+            if (users.find(u => u.email === email)) {
+                showAlert('An account with this email already exists', 'danger');
+                return;
+            }
+
+            // Show loading state
+            const signupBtn = document.getElementById('signup-btn');
+            const originalText = signupBtn.innerHTML;
+            signupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+            signupBtn.disabled = true;
+
+            // Simulate API call
+            setTimeout(() => {
+                // Create new user
+                const newUser = {
+                    id: Date.now().toString(),
+                    name: `${firstName} ${lastName}`,
+                    email: email,
+                    password: password,
+                    role: role,
+                    avatar: selectedAvatar,
+                    createdAt: new Date().toISOString(),
+                    lastLogin: null
+                };
+
+                // Save user to localStorage
+                users.push(newUser);
+                localStorage.setItem('sentinelai_users', JSON.stringify(users));
+
+                // Create session
+                const session = {
+                    user: {
+                        id: newUser.id,
+                        name: newUser.name,
+                        email: newUser.email,
+                        role: newUser.role,
+                        avatar: newUser.avatar
+                    },
+                    loginTime: new Date().toISOString(),
+                    rememberMe: false
+                };
+
+                localStorage.setItem('sentinelai_session', JSON.stringify(session));
+
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
+            }, 2000);
+        });
+
+        // Show alert message
+        function showAlert(message, type) {
+            const alert = document.getElementById('signup-alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.classList.remove('d-none');
+
+            setTimeout(() => {
+                alert.classList.add('d-none');
+            }, 5000);
+        }
+
+        // Check if user is already logged in
+        window.addEventListener('load', function() {
+            const session = localStorage.getItem('sentinelai_session');
+            if (session) {
+                // User is already logged in, redirect to dashboard
+                window.location.href = 'dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>

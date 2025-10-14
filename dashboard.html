@@ -25,6 +25,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
             color: #333;
+            overflow-x: hidden;
         }
 
         .navbar-brand {
@@ -35,8 +36,31 @@
         .sidebar {
             background-color: var(--primary-color);
             color: white;
+            height: calc(100vh - 56px);
+            position: fixed;
+            left: 0;
+            top: 56px;
+            overflow-y: auto;
+            z-index: 100;
+            width: 16.666667%;
+        }
+
+        .main-content {
+            margin-left: 16.666667%;
             min-height: calc(100vh - 56px);
-            padding: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
         }
 
         /* Profile Alert Styles */
@@ -45,7 +69,6 @@
             border-radius: 8px;
         }
 
-        /* Profile Form States */
         .profile-form.editing .form-control:not([readonly]) {
             background-color: #fff;
             border-color: #3498db;
@@ -55,7 +78,7 @@
             cursor: pointer;
         }
 
-                /* Mobile Sidebar Styles */
+        /* Mobile Sidebar Styles */
         .sidebar-mobile {
             display: none;
         }
@@ -73,13 +96,13 @@
             width: 60px;
             height: 60px;
             font-size: 1.5rem;
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             transition: all 0.3s ease;
         }
 
         .mobile-menu-btn:hover {
             transform: scale(1.1);
-            background: var(--primary-dark);
+            background: var(--primary-color);
         }
 
         /* Mobile Styles */
@@ -127,13 +150,6 @@
 
             .sidebar-overlay.active {
                 display: block;
-            }
-
-            /* Adjust main content for mobile */
-            .col-md-10 {
-                width: 100% !important;
-                padding-left: 15px !important;
-                padding-right: 15px !important;
             }
 
             /* Mobile sidebar navigation styles */
@@ -193,6 +209,7 @@
             display: flex;
             gap: 15px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .avatar-option-profile {
@@ -223,7 +240,7 @@
 
         .profile-stats {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 15px;
             margin-top: 20px;
         }
@@ -295,31 +312,31 @@
         }
 
         .user-profile-dropdown .dropdown-toggle::after {
-    margin-left: 8px;
-}
+            margin-left: 8px;
+        }
 
-.user-avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-}
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
 
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-.user-role-badge {
-    background: var(--secondary-color);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
+        .user-role-badge {
+            background: var(--secondary-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
 
         .metric-card {
             text-align: center;
@@ -442,9 +459,9 @@
         }
 
         .tab-content {
-            padding: 20px;
             background-color: white;
             border-radius: 0 0 8px 8px;
+            min-height: 600px;
         }
 
         .nav-tabs .nav-link.active {
@@ -525,37 +542,71 @@
             display: inline-block;
             margin-right: 10px;
         }
+
+        /* Fix for tab content height */
+        .tab-pane {
+            min-height: auto;
+            overflow: visible;
+        }
+
+        /* Ensure proper spacing */
+        .container-fluid {
+            padding: 0;
+        }
+
+        /* Fix for dashboard header */
+        .d-flex.justify-content-between.flex-wrap.flex-md-nowrap.align-items-center.pt-3.pb-2.mb-3.border-bottom {
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+        }
+
+        /* Custom scrollbar for sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
     </style>
 </head>
 <body>
     <!-- Navigation -->
-<!-- Updated Navigation -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#">
-            <i class="fas fa-shield-alt"></i> SentinelAI
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                        <img id="user-avatar" src="" alt="User Avatar" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 8px;">
-                        <span id="user-name">User</span>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#profile" data-bs-toggle="tab"><i class="fas fa-user"></i> Profile</a></li>
-                        <li><a class="dropdown-item" href="#settings" data-bs-toggle="tab"><i class="fas fa-cog"></i> Settings</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-                    </ul>
-                </li>
-            </ul>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-shield-alt"></i> SentinelAI
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <img id="user-avatar" src="" alt="User Avatar" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 8px;">
+                            <span id="user-name">User</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#profile" data-bs-toggle="tab"><i class="fas fa-user"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="#settings" data-bs-toggle="tab"><i class="fas fa-cog"></i> Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
     <div class="container-fluid">
         <div class="row">
@@ -1371,179 +1422,180 @@
                             </div>
                         </div>
                     </div>
+
                     <!-- Profile Tab -->
-<div class="tab-pane fade" id="profile">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">User Profile</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <div class="btn-group me-2">
-                <button type="button" class="btn btn-sm btn-outline-primary" id="edit-profile-btn">
-                    <i class="fas fa-edit"></i> Edit Profile
-                </button>
-            </div>
-        </div>
-    </div>
+                    <div class="tab-pane fade" id="profile">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">User Profile</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <div class="btn-group me-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="edit-profile-btn">
+                                        <i class="fas fa-edit"></i> Edit Profile
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
-    <div class="row">
-        <div class="col-md-4">
-            <!-- Profile Card -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-id-card"></i> Profile Information
-                </div>
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <img id="profile-avatar" src="" alt="Profile Avatar"
-                             class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
-                    </div>
-                    <h4 id="profile-name">John Doe</h4>
-                    <p class="text-muted" id="profile-role">Security Analyst</p>
-                    <p class="text-muted" id="profile-email">john.doe@company.com</p>
-                    <div class="mt-3">
-                        <span class="badge bg-success" id="profile-status">Active</span>
-                        <span class="badge bg-info" id="profile-member-since">Member since Jan 2024</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Security Card -->
-            <div class="card mt-4">
-                <div class="card-header">
-                    <i class="fas fa-shield-alt"></i> Security
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <h6>Password</h6>
-                        <p class="text-muted">Last changed: <span id="password-last-changed">2 weeks ago</span></p>
-                        <button class="btn btn-outline-primary btn-sm" id="change-password-btn">
-                            Change Password
-                        </button>
-                    </div>
-                    <div class="mb-3">
-                        <h6>Two-Factor Authentication</h6>
-                        <p class="text-muted" id="2fa-status">Not enabled</p>
-                        <button class="btn btn-outline-secondary btn-sm" id="enable-2fa-btn">
-                            Enable 2FA
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-8">
-            <!-- Profile Details Form -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-user-edit"></i> Profile Details
-                </div>
-                <div class="card-body">
-                    <form id="profile-form">
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="profile-first-name" class="form-label">First Name</label>
-                                    <input type="text" class="form-control" id="profile-first-name"
-                                           placeholder="First Name" required>
+                            <div class="col-md-4">
+                                <!-- Profile Card -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-id-card"></i> Profile Information
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <div class="mb-3">
+                                            <img id="profile-avatar" src="" alt="Profile Avatar"
+                                                 class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                                        </div>
+                                        <h4 id="profile-name">John Doe</h4>
+                                        <p class="text-muted" id="profile-role">Security Analyst</p>
+                                        <p class="text-muted" id="profile-email">john.doe@company.com</p>
+                                        <div class="mt-3">
+                                            <span class="badge bg-success" id="profile-status">Active</span>
+                                            <span class="badge bg-info" id="profile-member-since">Member since Jan 2024</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Security Card -->
+                                <div class="card mt-4">
+                                    <div class="card-header">
+                                        <i class="fas fa-shield-alt"></i> Security
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <h6>Password</h6>
+                                            <p class="text-muted">Last changed: <span id="password-last-changed">2 weeks ago</span></p>
+                                            <button class="btn btn-outline-primary btn-sm" id="change-password-btn">
+                                                Change Password
+                                            </button>
+                                        </div>
+                                        <div class="mb-3">
+                                            <h6>Two-Factor Authentication</h6>
+                                            <p class="text-muted" id="2fa-status">Not enabled</p>
+                                            <button class="btn btn-outline-secondary btn-sm" id="enable-2fa-btn">
+                                                Enable 2FA
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="profile-last-name" class="form-label">Last Name</label>
-                                    <input type="text" class="form-control" id="profile-last-name"
-                                           placeholder="Last Name" required>
+
+                            <div class="col-md-8">
+                                <!-- Profile Details Form -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-user-edit"></i> Profile Details
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="profile-form">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="profile-first-name" class="form-label">First Name</label>
+                                                        <input type="text" class="form-control" id="profile-first-name"
+                                                               placeholder="First Name" required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="profile-last-name" class="form-label">Last Name</label>
+                                                        <input type="text" class="form-control" id="profile-last-name"
+                                                               placeholder="Last Name" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="profile-email-input" class="form-label">Email Address</label>
+                                                <input type="email" class="form-control" id="profile-email-input"
+                                                       placeholder="Email Address" required readonly>
+                                                <div class="form-text">Email cannot be changed. Contact administrator for email changes.</div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="profile-role-select" class="form-label">Role</label>
+                                                <select class="form-control" id="profile-role-select" disabled>
+                                                    <option value="security_analyst">Security Analyst</option>
+                                                    <option value="network_admin">Network Administrator</option>
+                                                    <option value="security_manager">Security Manager</option>
+                                                    <option value="system_admin">System Administrator</option>
+                                                </select>
+                                                <div class="form-text">Role changes require administrator approval.</div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Profile Avatar</label>
+                                                <div class="avatar-options-profile">
+                                                    <div class="avatar-option-profile selected" data-avatar="avatar1.png">
+                                                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMzNDk4REIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 1">
+                                                    </div>
+                                                    <div class="avatar-option-profile" data-avatar="avatar2.png">
+                                                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMyZWNjNzEiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 2">
+                                                    </div>
+                                                    <div class="avatar-option-profile" data-avatar="avatar3.png">
+                                                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiNmMzljMTIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 3">
+                                                    </div>
+                                                    <div class="avatar-option-profile" data-avatar="avatar4.png">
+                                                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiM5YjU5YjYiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 4">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="profile-department" class="form-label">Department</label>
+                                                <input type="text" class="form-control" id="profile-department"
+                                                       placeholder="Department">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="profile-phone" class="form-label">Phone Number</label>
+                                                <input type="tel" class="form-control" id="profile-phone"
+                                                       placeholder="Phone Number">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="profile-location" class="form-label">Location</label>
+                                                <input type="text" class="form-control" id="profile-location"
+                                                       placeholder="Location">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="profile-bio" class="form-label">Bio</label>
+                                                <textarea class="form-control" id="profile-bio" rows="3"
+                                                          placeholder="Tell us about yourself..."></textarea>
+                                            </div>
+
+                                            <div class="d-flex justify-content-between">
+                                                <button type="button" class="btn btn-secondary" id="cancel-edit-btn" style="display: none;">
+                                                    Cancel
+                                                </button>
+                                                <button type="submit" class="btn btn-primary" id="save-profile-btn" disabled>
+                                                    <i class="fas fa-save"></i> Save Changes
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div class="mb-3">
-                            <label for="profile-email-input" class="form-label">Email Address</label>
-                            <input type="email" class="form-control" id="profile-email-input"
-                                   placeholder="Email Address" required readonly>
-                            <div class="form-text">Email cannot be changed. Contact administrator for email changes.</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="profile-role-select" class="form-label">Role</label>
-                            <select class="form-control" id="profile-role-select" disabled>
-                                <option value="security_analyst">Security Analyst</option>
-                                <option value="network_admin">Network Administrator</option>
-                                <option value="security_manager">Security Manager</option>
-                                <option value="system_admin">System Administrator</option>
-                            </select>
-                            <div class="form-text">Role changes require administrator approval.</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Profile Avatar</label>
-                            <div class="avatar-options-profile">
-                                <div class="avatar-option-profile selected" data-avatar="avatar1.png">
-                                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMzNDk4REIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 1">
-                                </div>
-                                <div class="avatar-option-profile" data-avatar="avatar2.png">
-                                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMyZWNjNzEiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 2">
-                                </div>
-                                <div class="avatar-option-profile" data-avatar="avatar3.png">
-                                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiNmMzljMTIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 3">
-                                </div>
-                                <div class="avatar-option-profile" data-avatar="avatar4.png">
-                                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiM5YjU5YjYiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==" alt="Avatar 4">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="profile-department" class="form-label">Department</label>
-                            <input type="text" class="form-control" id="profile-department"
-                                   placeholder="Department">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="profile-phone" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="profile-phone"
-                                   placeholder="Phone Number">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="profile-location" class="form-label">Location</label>
-                            <input type="text" class="form-control" id="profile-location"
-                                   placeholder="Location">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="profile-bio" class="form-label">Bio</label>
-                            <textarea class="form-control" id="profile-bio" rows="3"
-                                      placeholder="Tell us about yourself..."></textarea>
-                        </div>
-
-                        <div class="d-flex justify-content-between">
-                            <button type="button" class="btn btn-secondary" id="cancel-edit-btn" style="display: none;">
-                                Cancel
-                            </button>
-                            <button type="submit" class="btn btn-primary" id="save-profile-btn" disabled>
-                                <i class="fas fa-save"></i> Save Changes
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Activity Log -->
-            <div class="card mt-4">
-                <div class="card-header">
-                    <i class="fas fa-history"></i> Recent Activity
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Activity</th>
-                                    <th>IP Address</th>
-                                </tr>
-                            </thead>
-                            <tbody id="profile-activity-log">
-                                <!-- Activity log will be populated here -->
+                                <!-- Activity Log -->
+                                <div class="card mt-4">
+                                    <div class="card-header">
+                                        <i class="fas fa-history"></i> Recent Activity
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Activity</th>
+                                                        <th>IP Address</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="profile-activity-log">
+                                                    <!-- Activity log will be populated here -->
                                                 </tbody>
                                             </table>
                                         </div>
@@ -1706,7 +1758,6 @@
             initializeUserProfile();
             initializeEnhancedProfile();
             initializeUserData();
-
         });
 
         // Initialize dashboard components
@@ -2221,277 +2272,6 @@
                 }
             });
 
-            // Profile Management Functions
-            function initializeProfileSection() {
-                loadProfileData();
-                setupProfileEventListeners();
-            }
-
-            function loadProfileData() {
-                const session = localStorage.getItem('sentinelai_session');
-                if (!session) return;
-
-                const userData = JSON.parse(session).user;
-                const users = JSON.parse(localStorage.getItem('sentinelai_users') || '[]');
-                const user = users.find(u => u.id === userData.id);
-
-                if (user) {
-                    // Update profile display
-                    document.getElementById('profile-name').textContent = user.name;
-                    document.getElementById('profile-role').textContent = formatRole(user.role);
-                    document.getElementById('profile-email').textContent = user.email;
-                    document.getElementById('profile-avatar').src = getAvatarUrl(user.avatar);
-
-                    // Update form fields
-                    const nameParts = user.name.split(' ');
-                    document.getElementById('profile-first-name').value = nameParts[0] || '';
-                    document.getElementById('profile-last-name').value = nameParts.slice(1).join(' ') || '';
-                    document.getElementById('profile-email-input').value = user.email;
-                    document.getElementById('profile-role-select').value = user.role;
-
-                    // Set selected avatar
-                    document.querySelectorAll('.avatar-option-profile').forEach(option => {
-                        option.classList.remove('selected');
-                        if (option.getAttribute('data-avatar') === user.avatar) {
-                            option.classList.add('selected');
-                        }
-                    });
-
-                    // Load additional profile data
-                    loadAdditionalProfileData(user);
-                    loadActivityLog(user.id);
-                }
-            }
-
-            function loadAdditionalProfileData(user) {
-                // Load extended profile data from localStorage
-                const profileData = JSON.parse(localStorage.getItem(`sentinelai_profile_${user.id}`) || '{}');
-
-                document.getElementById('profile-department').value = profileData.department || '';
-                document.getElementById('profile-phone').value = profileData.phone || '';
-                document.getElementById('profile-location').value = profileData.location || '';
-                document.getElementById('profile-bio').value = profileData.bio || '';
-
-                // Update member since
-                const joinDate = new Date(user.createdAt || new Date());
-                document.getElementById('profile-member-since').textContent =
-                    `Member since ${joinDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
-            }
-
-            function setupProfileEventListeners() {
-                // Avatar selection
-                document.querySelectorAll('.avatar-option-profile').forEach(option => {
-                    option.addEventListener('click', function() {
-                        if (!document.getElementById('profile-form').classList.contains('editing')) return;
-
-                        document.querySelectorAll('.avatar-option-profile').forEach(opt => {
-                            opt.classList.remove('selected');
-                        });
-                        this.classList.add('selected');
-                        document.getElementById('save-profile-btn').disabled = false;
-                    });
-                });
-
-                // Edit profile button
-                document.getElementById('edit-profile-btn').addEventListener('click', function() {
-                    enableProfileEditing();
-                });
-
-                // Cancel edit button
-                document.getElementById('cancel-edit-btn').addEventListener('click', function() {
-                    disableProfileEditing();
-                    loadProfileData(); // Reload original data
-                });
-
-                // Form submission
-                document.getElementById('profile-form').addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    saveProfileChanges();
-                });
-
-                // Form field changes
-                const formFields = document.querySelectorAll('#profile-form input, #profile-form textarea');
-                formFields.forEach(field => {
-                    field.addEventListener('input', function() {
-                        if (document.getElementById('profile-form').classList.contains('editing')) {
-                            document.getElementById('save-profile-btn').disabled = false;
-                        }
-                    });
-                });
-
-                // Change password button
-                document.getElementById('change-password-btn').addEventListener('click', function() {
-                    showChangePasswordModal();
-                });
-            }
-
-            function enableProfileEditing() {
-                const form = document.getElementById('profile-form');
-                form.classList.add('editing');
-
-                // Enable editable fields
-                document.getElementById('profile-first-name').readOnly = false;
-                document.getElementById('profile-last-name').readOnly = false;
-                document.getElementById('profile-department').readOnly = false;
-                document.getElementById('profile-phone').readOnly = false;
-                document.getElementById('profile-location').readOnly = false;
-                document.getElementById('profile-bio').readOnly = false;
-
-                // Show cancel button
-                document.getElementById('cancel-edit-btn').style.display = 'block';
-
-                // Enable avatar selection
-                document.querySelectorAll('.avatar-option-profile').forEach(option => {
-                    option.style.cursor = 'pointer';
-                });
-            }
-
-            function disableProfileEditing() {
-                const form = document.getElementById('profile-form');
-                form.classList.remove('editing');
-
-                // Disable fields
-                document.getElementById('profile-first-name').readOnly = true;
-                document.getElementById('profile-last-name').readOnly = true;
-                document.getElementById('profile-department').readOnly = true;
-                document.getElementById('profile-phone').readOnly = true;
-                document.getElementById('profile-location').readOnly = true;
-                document.getElementById('profile-bio').readOnly = true;
-
-                // Hide cancel button
-                document.getElementById('cancel-edit-btn').style.display = 'none';
-                document.getElementById('save-profile-btn').disabled = true;
-
-                // Disable avatar selection
-                document.querySelectorAll('.avatar-option-profile').forEach(option => {
-                    option.style.cursor = 'default';
-                });
-            }
-
-            function saveProfileChanges() {
-                const session = localStorage.getItem('sentinelai_session');
-                if (!session) return;
-
-                const userData = JSON.parse(session).user;
-                const users = JSON.parse(localStorage.getItem('sentinelai_users') || '[]');
-                const userIndex = users.findIndex(u => u.id === userData.id);
-
-                if (userIndex !== -1) {
-                    // Get form values
-                    const firstName = document.getElementById('profile-first-name').value;
-                    const lastName = document.getElementById('profile-last-name').value;
-                    const selectedAvatar = document.querySelector('.avatar-option-profile.selected').getAttribute('data-avatar');
-
-                    // Update user data
-                    users[userIndex].name = `${firstName} ${lastName}`;
-                    users[userIndex].avatar = selectedAvatar;
-
-                    // Save extended profile data
-                    const profileData = {
-                        department: document.getElementById('profile-department').value,
-                        phone: document.getElementById('profile-phone').value,
-                        location: document.getElementById('profile-location').value,
-                        bio: document.getElementById('profile-bio').value,
-                        lastUpdated: new Date().toISOString()
-                    };
-
-                    localStorage.setItem(`sentinelai_profile_${userData.id}`, JSON.stringify(profileData));
-                    localStorage.setItem('sentinelai_users', JSON.stringify(users));
-
-                    // Update session
-                    const updatedSession = JSON.parse(session);
-                    updatedSession.user.name = users[userIndex].name;
-                    updatedSession.user.avatar = users[userIndex].avatar;
-                    localStorage.setItem('sentinelai_session', JSON.stringify(updatedSession));
-
-                    // Update UI
-                    loadProfileData();
-                    disableProfileEditing();
-                    updateNavigationProfile();
-
-                    // Show success message
-                    showProfileAlert('Profile updated successfully!', 'success');
-
-                    // Log activity
-                    logProfileActivity(userData.id, 'Profile updated');
-                }
-            }
-
-            function loadActivityLog(userId) {
-                const activities = JSON.parse(localStorage.getItem(`sentinelai_activities_${userId}`) || '[]');
-                const activityLog = document.getElementById('profile-activity-log');
-
-                activityLog.innerHTML = '';
-
-                // Show recent activities (last 5)
-                const recentActivities = activities.slice(-5).reverse();
-
-                recentActivities.forEach(activity => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${new Date(activity.timestamp).toLocaleDateString()}</td>
-                        <td>${activity.action}</td>
-                        <td>${activity.ip || 'N/A'}</td>
-                    `;
-                    activityLog.appendChild(row);
-                });
-            }
-
-            function logProfileActivity(userId, action) {
-                const activities = JSON.parse(localStorage.getItem(`sentinelai_activities_${userId}`) || '[]');
-
-                activities.push({
-                    action: action,
-                    timestamp: new Date().toISOString(),
-                    ip: '127.0.0.1' // In real app, this would be the actual IP
-                });
-
-                localStorage.setItem(`sentinelai_activities_${userId}`, JSON.stringify(activities));
-                loadActivityLog(userId);
-            }
-
-            function formatRole(role) {
-                return role.split('_').map(word =>
-                    word.charAt(0).toUpperCase() + word.slice(1)
-                ).join(' ');
-            }
-
-            function showProfileAlert(message, type) {
-                // Create temporary alert
-                const alert = document.createElement('div');
-                alert.className = `alert alert-${type} alert-dismissible fade show`;
-                alert.innerHTML = `
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
-
-                const profileHeader = document.querySelector('#profile .border-bottom');
-                profileHeader.parentNode.insertBefore(alert, profileHeader.nextSibling);
-
-                // Remove alert after 5 seconds
-                setTimeout(() => {
-                    if (alert.parentNode) {
-                        alert.remove();
-                    }
-                }, 5000);
-            }
-
-            function showChangePasswordModal() {
-                // Simple implementation - in real app, this would be a proper modal
-                const newPassword = prompt('Enter new password:');
-                if (newPassword && newPassword.length >= 8) {
-                    showProfileAlert('Password changed successfully!', 'success');
-                    logProfileActivity(JSON.parse(localStorage.getItem('sentinelai_session')).user.id, 'Password changed');
-                } else if (newPassword) {
-                    alert('Password must be at least 8 characters long');
-                }
-            }
-
-            function updateNavigationProfile() {
-                // Update navigation with new profile data
-                initializeUserProfile();
-            }
-
             // Threat Distribution Chart
             const threatDistributionCtx = document.getElementById('threatDistributionChart').getContext('2d');
             threatDistributionChart = new Chart(threatDistributionCtx, {
@@ -2655,68 +2435,57 @@
         }
 
         // Authentication and User Profile Management
-function initializeUserProfile() {
-    const session = localStorage.getItem('sentinelai_session');
+        function initializeUserProfile() {
+            const session = localStorage.getItem('sentinelai_session');
 
-    if (!session) {
-        // Redirect to login if no session exists
-        window.location.href = 'login.html';
-        return;
-    }
+            if (!session) {
+                // Redirect to login if no session exists
+                window.location.href = 'login.html';
+                return;
+            }
 
-    const userData = JSON.parse(session).user;
+            const userData = JSON.parse(session).user;
 
-    // Update user information in navbar
-    document.getElementById('user-name').textContent = userData.name;
-    document.getElementById('user-avatar').src = getAvatarUrl(userData.avatar);
+            // Update user information in navbar
+            document.getElementById('user-name').textContent = userData.name;
+            document.getElementById('user-avatar').src = getAvatarUrl(userData.avatar);
 
-    // Update user role in dashboard if needed
-    updateUserRoleDisplay(userData.role);
-}
+            // Update user role in dashboard if needed
+            updateUserRoleDisplay(userData.role);
+        }
 
-function getAvatarUrl(avatar) {
-    // Return appropriate avatar URL based on avatar name
-    const avatarMap = {
-        'avatar1.png': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMzNDk4REIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==',
-        'avatar2.png': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMyZWNjNzEiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==',
-        'avatar3.png': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiNmMzljMTIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==',
-        'avatar4.png': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiM5YjU5YjYiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg=='
-    };
+        function getAvatarUrl(avatar) {
+            // Return appropriate avatar URL based on avatar name
+            const avatarMap = {
+                'avatar1.png': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMzNDk4REIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==',
+                'avatar2.png': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMyZWNjNzEiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==',
+                'avatar3.png': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiNmMzljMTIiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg==',
+                'avatar4.png': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiM5YjU5YjYiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeD0iMTAiIHk9IjEwIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNlYyMkgyMlYyM0gyVjIySDNWMTZDMyAxMy4zIDQuMSAxMC43IDYgOC45MkM2IDUuNzMgOC4xNiAzLjEgMTEgM0MxMS4wNCAzIDExLjA3IDMgMTEuMTEgM0MxMS4zOCAzIDExLjY2IDMuMDEgMTEuOTQgMy4wM0MxNC42OSAzLjI0IDE3IDUuMzYgMTcgOEMxOSAxMCAyMSAxMi4zIDIxIDE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPg=='
+            };
 
-    return avatarMap[avatar] || avatarMap['avatar1.png'];
-}
+            return avatarMap[avatar] || avatarMap['avatar1.png'];
+        }
 
-function updateUserRoleDisplay(role) {
-    // Update dashboard based on user role
-    const roleDisplay = document.getElementById('user-role-display');
-    if (roleDisplay) {
-        roleDisplay.textContent = role.replace('_', ' ').toUpperCase();
-    }
+        function updateUserRoleDisplay(role) {
+            // Update dashboard based on user role
+            const roleDisplay = document.getElementById('user-role-display');
+            if (roleDisplay) {
+                roleDisplay.textContent = role.replace('_', ' ').toUpperCase();
+            }
 
-    // You can add role-based UI modifications here
-    if (role === 'security_analyst') {
-        // Enable specific features for security analysts
-    } else if (role === 'network_admin') {
-        // Enable network admin features
-    }
-}
+            // You can add role-based UI modifications here
+            if (role === 'security_analyst') {
+                // Enable specific features for security analysts
+            } else if (role === 'network_admin') {
+                // Enable network admin features
+            }
+        }
 
-function logout() {
-    // Clear session and redirect to login
-    localStorage.removeItem('sentinelai_session');
-    window.location.href = 'login.html';
-}
-
-// Add logout functionality
-document.addEventListener('DOMContentLoaded', function() {
-    initializeUserProfile();
-
-    // Add logout event listener
-    document.getElementById('logout-btn').addEventListener('click', function(e) {
-        e.preventDefault();
-        logout();
-    });
-});
+        function logout() {
+            // Clear session and redirect to login
+            localStorage.removeItem('sentinelai_session');
+            window.location.href = 'login.html';
+        }
 
         // Load initial data
         function loadInitialData() {
@@ -2803,6 +2572,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Save settings
             document.getElementById('save-settings').addEventListener('click', function() {
                 saveSettings();
+            });
+
+            // Add logout event listener
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
             });
         }
 
@@ -3901,37 +3676,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-
-                function initializeUserProfile() {
-            const session = localStorage.getItem('sentinelai_session');
-
-            if (!session) {
-                console.warn('No user session found');
-                return;
-            }
-
-            try {
-                const userData = JSON.parse(session).user;
-
-                // Update user information in navbar
-                const userNameElement = document.getElementById('user-name');
-                const userAvatarElement = document.getElementById('user-avatar');
-
-                if (userNameElement) {
-                    userNameElement.textContent = userData.name;
-                }
-                if (userAvatarElement) {
-                    userAvatarElement.src = getAvatarUrl(userData.avatar);
-                }
-
-                // Update user role in dashboard if needed
-                updateUserRoleDisplay(userData.role);
-            } catch (error) {
-                console.error('Error initializing user profile:', error);
-            }
-        }
-
-                // Mobile sidebar functionality
+        // Mobile sidebar functionality
         function toggleMobileSidebar() {
             const sidebar = document.getElementById('mobileSidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -3957,44 +3702,6 @@ document.addEventListener('DOMContentLoaded', function() {
             overlay.classList.remove('active');
             button.innerHTML = '<i class="fas fa-bars"></i>';
         }
-
-        // Close sidebar when clicking outside or pressing ESC
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('mobileSidebar');
-            const button = document.getElementById('mobileMenuBtn');
-            const overlay = document.getElementById('sidebarOverlay');
-
-            if (sidebar.classList.contains('active') &&
-                !sidebar.contains(event.target) &&
-                !button.contains(event.target)) {
-                closeMobileSidebar();
-            }
-        });
-
-        // Close sidebar with ESC key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeMobileSidebar();
-            }
-        });
-
-        // Update active tab in mobile sidebar
-        document.addEventListener('DOMContentLoaded', function() {
-            // Update mobile sidebar active state when tabs change
-            const tabLinks = document.querySelectorAll('.nav-link[data-bs-toggle="tab"]');
-            tabLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    // Update active state in mobile sidebar
-                    const mobileLinks = document.querySelectorAll('.sidebar-mobile .nav-link');
-                    mobileLinks.forEach(mobileLink => {
-                        mobileLink.classList.remove('active');
-                        if (mobileLink.getAttribute('href') === this.getAttribute('href')) {
-                            mobileLink.classList.add('active');
-                        }
-                    });
-                });
-            });
-        });
 
         // Handle page visibility change
         document.addEventListener('visibilitychange', function() {
